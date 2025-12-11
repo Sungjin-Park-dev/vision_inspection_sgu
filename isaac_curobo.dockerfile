@@ -42,10 +42,12 @@ WORKDIR /curobo
 
 RUN /isaac-sim/python.sh -m pip install -e ".[isaacsim]" --no-build-isolation
 
-# 로컬 ur20_description 파일을 컨테이너로 복사
-COPY ur20_description/ur20.yml /curobo/src/curobo/content/configs/robot/
-COPY ur20_description/ur20.urdf /curobo/src/curobo/content/assets/robot/ur_description/
-COPY ur20_description/ur20 /curobo/src/curobo/content/assets/robot/ur_description/meshes/ur20
+# vision_inspection_sgu clone 및 파일 이동
+WORKDIR /curobo
+RUN git clone https://github.com/Sungjin-Park-dev/vision_inspection_sgu.git && \
+    cp /curobo/vision_inspection_sgu/ur20_description/ur20.yml /curobo/src/curobo/content/configs/robot/ && \
+    cp /curobo/vision_inspection_sgu/ur20_description/ur20.urdf /curobo/src/curobo/content/assets/robot/ur_description/ && \
+    cp -r /curobo/vision_inspection_sgu/ur20_description/ur20 /curobo/src/curobo/content/assets/robot/ur_description/meshes/
 
 
 RUN /isaac-sim/python.sh -m pip install open3d EAIK h5py
