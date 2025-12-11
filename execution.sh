@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -e
+
+########################################
+# 설정 (환경변수로 덮어쓸 수 있음)
+########################################
+
+# 설치 스크립트에서 만든 이미지 이름과 맞추세요
+IMAGE_NAME=${ISAAC_CUROBO_IMAGE:-isaac_curobo:image}
+CONTAINER_NAME=${ISAAC_CONTAINER_NAME:-isaac_curobo_container}
+
+# IsaacSim-ros_workspaces 위치 (설치 스크립트와 동일하게)
+ROS_WS_DIR=${ISAAC_ROS_WS_DIR:-$HOME/IsaacSim-ros_workspaces}
+
+# Xauthority (GUI를 위해 필요)
+XAUTH=${XAUTHORITY:-$HOME/.Xauthority}
+
+########################################
+# 존재 여부 체크
+########################################
+
+if ! docker image inspect "$IMAGE_NAME" > /dev/null 2>&1; then
+  echo "[run_isaac_curobo] ERROR: Docker image '$IMAGE_NAME' not found."
+  echo "  먼저 install 스크립트(이미지 빌드)를 실행했는지 확인하세요."
+  exit 1
+fi
+
+if [ ! -d "$ROS_WS_DIR" ]; then
+  echo "[run_isaac_curobo] WARNING: ROS workspace dir '$ROS_WS_DIR' 가 없습니다."
+  echo "  IsaacSim-ros_workspaces 를 아직 빌드하지 않았을 수도 있습니다."
+fi
+
+if [ ! -f "$XAUTH" ]; then
+  echo "[run_isaac_curobo] WARNING: Xauthority 파일 '$XAUTH' 를 찾을 수 없습니다."
+  echo "  GUI가 안 뜰 수도 있습니다. (headless라면 무시해도 됨)"
+fi
+
+########################################
+# 기존 컨테이너 정리 (있으면)
+########################################
+
+if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"; then
+  echo "[run_isaac_curobo] 기존 컨테이너 '$CONTAINER_NAME' 발견."
+
+  if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"; then
+    echo "  -> 이미 실행 중입니다. 해당 컨테이너에 attach 하거나 exec 로 들어가세요:"
+    echo "     docker exec -it $CONTAINER_NAME bash"
+    exit 0
+#   else
+#     echo "  -> 정지 상태 컨테이너는 삭제합니다."
+#     docker rm "$CONTAINER_NAME" > /dev/null
+#   fi
+  fi
+fi
+
+########################################
+# docker run
+########################################
+
+echo "[run_isaac_curobo] 컨테이너 실행:"
+echo "  IMAGE    : $IMAGE_NAME"
+echo "  NAME     : $CONTAINER_NAME"
+echo "  ROS WS   : $ROS_WS_DIR"
+
+docker run --name "$CONTAINER_NAME" --entrypoint bash -it\
+  --runtime=nvidia --gpus all \
+  -e ACCEPT_EULA=Y \
+  -e PRIVACY_CONSENT=Y \
+  --network host \
+  -e DISPLAY \
+  -v "$XAUTH":/root/.Xauthority \
+  -v ~/docker/isaac-sim/cache/kit:/isaac-sim/kit/cache:rw \
+  -v ~/docker/isaac-sim/cache/ov:/root/.cache/ov:rw \
+  -v ~/docker/isaac-sim/cache/pip:/root/.cache/pip:rw \
+  -v ~/docker/isaac-sim/cache/glcache:/root/.cache/nvidia/GLCache:rw \
+  -v ~/docker/isaac-sim/cache/computecache:/root/.nv/ComputeCache:rw \
+  -v ~/docker/isaac-sim/logs:/root/.nvidia-omniverse/logs:rw \
+  -v ~/docker/isaac-sim/data:/root/.local/share/ov/data:rw \
+  -v ~/docker/isaac-sim/documents:/root/Documents:rw \
+  -v "$ROS_WS_DIR":/workspace/IsaacSim-ros_workspaces:rw \
+  $IMAGE_NAME
