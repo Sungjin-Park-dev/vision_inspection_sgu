@@ -1,6 +1,6 @@
 # Blender 5.0.0
 # www.blender.org
-mtllib sample_step_scaled.mtl
+mtllib source.mtl
 o sample_step
 v -0.110000 0.037500 0.000000
 v -0.097500 0.050000 0.000000

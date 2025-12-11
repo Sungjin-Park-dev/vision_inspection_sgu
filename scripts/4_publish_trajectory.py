@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
 import csv
+import os
+import sys
+from pathlib import Path
+
 import rclpy
 from rclpy.node import Node
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from builtin_interfaces.msg import Duration
+
+# Add parent directory to path for common module
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from common import config
 
 
 class JointTrajectoryPublisher(Node):
@@ -39,7 +47,7 @@ class JointTrajectoryPublisher(Node):
         # Publisher
         self.pub = self.create_publisher(
             JointTrajectory,
-            '/scaled_joint_trajectory_controller/joint_trajectory',
+            '/joint_trajectory_from_csv',
             10
         )
 
@@ -61,6 +69,11 @@ class JointTrajectoryPublisher(Node):
         """Publish the full trajectory."""
         if self.published:
             return
+
+        # 🚀 subscriber 연결될 때까지 대기
+        while self.pub.get_subscription_count() == 0:
+            self.get_logger().info("아직 Subscriber 연결 안 됨. 기다리는 중...")
+            rclpy.sleep(0.5)
 
         msg = JointTrajectory()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -96,21 +109,34 @@ def main(args=None):
     import argparse
     parser = argparse.ArgumentParser(description='Publish joint trajectory from CSV')
     parser.add_argument(
-        '--csv',
+        '--object',
         type=str,
-        default='/curobo/vision_inspection_sogang/data/sample/trajectory/163/trajectory.csv',
-        help='Path to trajectory CSV file'
+        required=True,
+        help="Object name for auto-path generation (e.g., 'sample', 'glass')"
+    )
+    parser.add_argument(
+        '--num_viewpoints',
+        type=int,
+        required=True,
+        help='Number of viewpoints'
     )
     parser.add_argument(
         '--dt',
         type=float,
-        default=1,
+        default=0.01,
         help='Time step between trajectory points in seconds (default: 0.01)'
     )
     parsed_args, remaining = parser.parse_known_args()
 
+    # Auto-generate trajectory path
+    csv_path = str(config.get_trajectory_path(parsed_args.object, parsed_args.num_viewpoints, "trajectory.csv"))
+
+    print(f"Object: {parsed_args.object}")
+    print(f"Num viewpoints: {parsed_args.num_viewpoints}")
+    print(f"Trajectory path: {csv_path}")
+
     rclpy.init(args=remaining)
-    node = JointTrajectoryPublisher(parsed_args.csv, parsed_args.dt)
+    node = JointTrajectoryPublisher(csv_path, parsed_args.dt)
 
     try:
         rclpy.spin(node)
