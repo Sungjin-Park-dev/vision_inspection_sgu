@@ -43,13 +43,13 @@ if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"; then
   echo "[run_isaac_curobo] 기존 컨테이너 '$CONTAINER_NAME' 발견."
 
   if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"; then
-    echo "  -> 이미 실행 중입니다. 해당 컨테이너에 attach 하거나 exec 로 들어가세요:"
-    echo "     docker exec -it $CONTAINER_NAME bash"
+    echo "  -> 실행 중인 컨테이너에 접속합니다."
+    docker exec -it "$CONTAINER_NAME" bash
     exit 0
-#   else
-#     echo "  -> 정지 상태 컨테이너는 삭제합니다."
-#     docker rm "$CONTAINER_NAME" > /dev/null
-#   fi
+  else
+    echo "  -> 정지된 컨테이너를 다시 시작합니다."
+    docker start -ai "$CONTAINER_NAME"
+    exit 0
   fi
 fi
 
