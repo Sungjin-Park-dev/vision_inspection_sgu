@@ -11,17 +11,17 @@
 
 robot_cfg:
   kinematics:
-    usd_path: "robot/ur_description/ur20.usd"
+    usd_path: "robot/ur_description/ur20_with_camera.usd"
     usd_robot_root: "/robot"
     isaac_usd_path: ""
     usd_flip_joints: {}
     usd_flip_joint_limits: []
 
-    urdf_path: "robot/ur_description/ur20.urdf"
+    urdf_path: "robot/ur_description/ur20_with_camera.urdf"
     asset_root_path: "robot/ur_description"
     
     base_link: "base_link"
-    ee_link: "tool0"
+    ee_link: "camera_optical_frame"
     link_names: null
     lock_joints: null
     extra_links: null
@@ -79,10 +79,17 @@ robot_cfg:
         - "center": [0.0, 0.0, -0.046]
           "radius": 0.07931
       wrist_3_link:
-        - "center": [-0.008, 0.003, -0.035]
-          "radius": 0.06463
-        - "center": [0.011, -0.008, -0.035]
-          "radius": 0.06463
+        - "center": [0.00, 0.00, -0.02]
+          "radius": 0.07
+        - "center": [0.011, -0.008, 0.05]
+          "radius": 0.05
+        - "center": [0.011, -0.008, 0.1]
+          "radius": 0.05
+        - "center": [0.011, -0.008, 0.15]
+          "radius": 0.05
+        - "center": [0.011, -0.008, 0.2]
+          "radius": 0.05
+      
       tool0:
         - "center": [0.001, 0.001, 0.05]
           "radius": -0.01 #0.05

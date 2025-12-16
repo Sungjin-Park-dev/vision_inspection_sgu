@@ -1,5 +1,8 @@
 FROM nvcr.io/nvidia/isaac-sim:5.0.0
 
+# root 권한으로 실행
+USER root
+
 # 기본 파일 설치
 RUN apt-get update && \
     apt-get install -y \
@@ -42,14 +45,19 @@ WORKDIR /curobo
 
 RUN /isaac-sim/python.sh -m pip install -e ".[isaacsim]" --no-build-isolation
 
-# vision_inspection_sgu clone 및 파일 이동
+# vision_inspection_sgu 로컬 파일 복사 (robot description)
+COPY ur20_description/ur20_with_camera.yml /curobo/src/curobo/content/configs/robot/
+COPY ur20_description/ur20_with_camera.urdf /curobo/src/curobo/content/assets/robot/ur_description/
+COPY ur20_description/ur20 /curobo/src/curobo/content/assets/robot/ur_description/meshes/ur20
+COPY ur20_description/camera /curobo/src/curobo/content/assets/robot/ur_description/meshes/camera
+
+# vision_inspection_sgu 프로젝트 폴더 복사
+WORKDIR /curobo/vision_inspection_sgu
+COPY common/ ./common/
+COPY data/ ./data/
+COPY scripts/ ./scripts/
+
 WORKDIR /curobo
-RUN git clone https://github.com/Sungjin-Park-dev/vision_inspection_sgu.git && \
-    cp /curobo/vision_inspection_sgu/ur20_description/ur20.yml /curobo/src/curobo/content/configs/robot/ && \
-    cp /curobo/vision_inspection_sgu/ur20_description/ur20.urdf /curobo/src/curobo/content/assets/robot/ur_description/ && \
-    cp -r /curobo/vision_inspection_sgu/ur20_description/ur20 /curobo/src/curobo/content/assets/robot/ur_description/meshes/
-
-
 RUN /isaac-sim/python.sh -m pip install open3d EAIK h5py
 
 

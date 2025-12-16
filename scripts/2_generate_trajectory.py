@@ -12,12 +12,9 @@ This script integrates the complete vision inspection pipeline:
 7. Save final collision-free trajectory to CSV
 
 Usage:
-    /isaac-sim/python.sh new_scripts/2_generate_trajectory.py \
+    /isaac-sim/python.sh scripts/2_generate_trajectory.py \
         --object sample \
-        --num_viewpoints 163 \
-        [--knn 5] \
-        [--lambda-rot 1.0] \
-        [--visualize]
+        --num_viewpoints 163
 
     Paths are auto-generated:
     - Input:  data/{object}/viewpoint/{num_viewpoints}/viewpoints.h5
