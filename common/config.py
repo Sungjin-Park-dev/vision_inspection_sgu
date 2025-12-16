@@ -32,43 +32,63 @@ CAMERA_OVERLAP_RATIO = 0.5
 # World Configuration (Isaac Sim coordinates, meters)
 # ============================================================================
 
-# Target object position in world frame (x, y, z)
-TARGET_OBJECT_POSITION = np.array([0.00, 1.0, -0.172], dtype=np.float64)
+# Target object configuration
+TARGET_OBJECT = {
+    "name": "target_object",
+    "position": np.array([0.00, 1.09 + 0.13, 0.8 - 0.8], dtype=np.float64),
+    "rotation": np.array([0.7071, 0.0, 0.0, 0.7071], dtype=np.float64),  # quaternion: w, x, y, z
+}
 
-# Target object orientation in world frame (quaternion: w, x, y, z)
-TARGET_OBJECT_ROTATION = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64)
+# Table cuboid configuration
+TABLE = {
+    "name": "table",
+    "position": np.array([0.0, 1.09 + 0.05, 0.365 - 0.8], dtype=np.float64),
+    "dimensions": np.array([1.0, 0.6, 0.5], dtype=np.float64),
+}
 
-# Table cuboid position in world frame (x, y, z)
-TABLE_POSITION = np.array([0.0, 1.0, -0.425], dtype=np.float64)
+# Wall (Fence) cuboid configuration - 4 walls surrounding the workspace
+WALLS = [
+    {
+        "name": "wall_front",
+        "position": np.array([0.0, 1.5, 0.5], dtype=np.float64),
+        "dimensions": np.array([2.2, 0.1, 1.0], dtype=np.float64),
+    },
+    {
+        "name": "wall_back",
+        "position": np.array([0.0, -1.0, 0.5], dtype=np.float64),
+        "dimensions": np.array([2.2, 0.1, 1.0], dtype=np.float64),
+    },
+    {
+        "name": "wall_left",
+        "position": np.array([-1.0, 0.0, 0.5], dtype=np.float64),
+        "dimensions": np.array([0.1, 2.2, 1.0], dtype=np.float64),
+    },
+    {
+        "name": "wall_right",
+        "position": np.array([1.0, 0.0, 0.5], dtype=np.float64),
+        "dimensions": np.array([0.1, 2.2, 1.0], dtype=np.float64),
+    },
+]
 
-# Table cuboid dimensions (x, y, z) in meters
-TABLE_DIMENSIONS = np.array([1.0, 0.6, 0.5], dtype=np.float64)
-
-# Wall (Fence) cuboid position in world frame (x, y, z)
-WALL_POSITION = np.array([0.0, -1.1, 0.5], dtype=np.float64)
-
-# Wall cuboid dimensions (x, y, z) in meters
-WALL_DIMENSIONS = np.array([2.2, 0.1, 1.0], dtype=np.float64)
-
-# Workbench cuboid position in world frame (x, y, z)
-WORKBENCH_POSITION = np.array([-1.1, 0.35, 0.5], dtype=np.float64)
-
-# Workbench cuboid dimensions (x, y, z) in meters
-WORKBENCH_DIMENSIONS = np.array([0.1, 3.0, 1.0], dtype=np.float64)
-
-# Robot mount (base) cuboid position in world frame (x, y, z)
-ROBOT_MOUNT_POSITION = np.array([0.0, 0.0, -0.25], dtype=np.float64)
-
-# Robot mount cuboid dimensions (x, y, z) in meters
-ROBOT_MOUNT_DIMENSIONS = np.array([0.3, 0.3, 0.5], dtype=np.float64)
+# Robot mount (base) configuration
+ROBOT_MOUNT = {
+    "name": "robot_mount",
+    "position": np.array([0.0, 0.0, -0.25], dtype=np.float64),
+    "dimensions": np.array([0.3, 0.3, 0.5], dtype=np.float64),
+}
 
 
 # ============================================================================
 # Robot Configuration
 # ============================================================================
 
+
 DEFAULT_ROBOT_CONFIG = "ur20_with_camera.yml"
 DEFAULT_URDF_PATH = "/curobo/src/curobo/content/assets/robot/ur_description/ur20_with_camera.urdf"
+
+# Tool offset: distance from tool0/wrist3 to camera_optical_frame (meters)
+# End-Effector로부터 카메라 초점까지의 실제 거리로 바뀌어야 합니ㅏ다.
+TOOL_TO_CAMERA_OPTICAL_OFFSET_M = 0.234
 
 
 # ============================================================================
@@ -88,7 +108,7 @@ DEFAULT_LAMBDA_ROT = 1.0
 # ============================================================================
 
 COLLISION_MARGIN = 0.0
-COLLISION_ADAPTIVE_MAX_JOINT_STEP_DEG = 0.1
+COLLISION_ADAPTIVE_MAX_JOINT_STEP_DEG = 0.05
 COLLISION_INTERP_EXCLUDE_LAST_JOINT = True
 
 
@@ -99,7 +119,7 @@ COLLISION_INTERP_EXCLUDE_LAST_JOINT = True
 REPLAN_ENABLED = True
 REPLAN_MAX_ATTEMPTS = 60
 REPLAN_TIMEOUT = 10.0  # seconds
-REPLAN_INTERP_DT = 0.01
+REPLAN_INTERP_DT = 0.02
 REPLAN_TRAJOPT_TSTEPS = 32
 
 

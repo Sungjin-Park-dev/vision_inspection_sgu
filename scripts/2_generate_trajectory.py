@@ -368,20 +368,21 @@ class Viewpoint:
 
 
 def setup_collision_world(
-    table_position: np.ndarray,
-    table_dimensions: np.ndarray,
-    wall_position: np.ndarray,
-    wall_dimensions: np.ndarray,
-    workbench_position: np.ndarray,
-    workbench_dimensions: np.ndarray,
-    robot_mount_position: np.ndarray,
-    robot_mount_dimensions: np.ndarray,
-    mesh_files: List[str],
-    mesh_position: np.ndarray,
-    mesh_rotation: np.ndarray
+    table: Dict,
+    walls: List[Dict],
+    robot_mount: Dict,
+    target_object: Dict,
+    target_mesh_path: Optional[str] = None,
 ) -> WorldConfig:
     """
     Setup collision world configuration with all obstacles
+
+    Args:
+        table: Table config dict with 'name', 'position', 'dimensions' keys
+        walls: List of wall dicts with 'name', 'position', 'dimensions' keys
+        robot_mount: Robot mount config dict with 'name', 'position', 'dimensions' keys
+        target_object: Target object config dict with 'name', 'position', 'rotation' keys
+        target_mesh_path: Optional path to target object mesh file for collision
 
     Returns:
         WorldConfig containing all configured obstacles
@@ -390,59 +391,58 @@ def setup_collision_world(
     world_cfg_table = WorldConfig.from_dict(
         load_yaml(join_path(get_world_configs_path(), "collision_table.yml"))
     )
-    world_cfg_table.cuboid[0].pose[:3] = table_position
-    world_cfg_table.cuboid[0].dims[:3] = table_dimensions
-    world_cfg_table.cuboid[0].name = "table"
+    world_cfg_table.cuboid[0].pose = list(table["position"]) + [1, 0, 0, 0]
+    world_cfg_table.cuboid[0].dims = list(table["dimensions"])
+    world_cfg_table.cuboid[0].name = table["name"]
 
-    # Add wall cuboid
-    wall_cuboid_dict = {
-        "table": {
-            "dims": wall_dimensions.tolist(),
-            "pose": list(wall_position) + [1, 0, 0, 0]
+    # Add wall cuboids
+    wall_cuboids = []
+    for wall in walls:
+        wall_dict = {
+            "table": {
+                "dims": wall["dimensions"].tolist(),
+                "pose": list(wall["position"]) + [1, 0, 0, 0]
+            }
         }
-    }
-    wall_cfg = WorldConfig.from_dict({"cuboid": wall_cuboid_dict})
-    wall_cfg.cuboid[0].name = "wall"
-
-    # Add workbench cuboid
-    workbench_cuboid_dict = {
-        "table": {
-            "dims": workbench_dimensions.tolist(),
-            "pose": list(workbench_position) + [1, 0, 0, 0]
-        }
-    }
-    workbench_cfg = WorldConfig.from_dict({"cuboid": workbench_cuboid_dict})
-    workbench_cfg.cuboid[0].name = "workbench"
+        wall_cfg = WorldConfig.from_dict({"cuboid": wall_dict})
+        wall_cfg.cuboid[0].name = wall["name"]
+        wall_cuboids.extend(wall_cfg.cuboid)
 
     # Add robot mount cuboid
     robot_mount_cuboid_dict = {
         "table": {
-            "dims": robot_mount_dimensions.tolist(),
-            "pose": list(robot_mount_position) + [1, 0, 0, 0]
+            "dims": robot_mount["dimensions"].tolist(),
+            "pose": list(robot_mount["position"]) + [1, 0, 0, 0]
         }
     }
     robot_mount_cfg = WorldConfig.from_dict({"cuboid": robot_mount_cuboid_dict})
-    robot_mount_cfg.cuboid[0].name = "robot_mount"
+    robot_mount_cfg.cuboid[0].name = robot_mount["name"]
 
-    # Add mesh obstacles
-    meshes = []
-    for i, mesh_file in enumerate(mesh_files):
-        mesh = Mesh(
-            name=f"obstacle_mesh_{i}",
-            file_path=mesh_file,
-            pose=list(mesh_position) + list(mesh_rotation),
-        )
-        meshes.append(mesh)
-
-    # Combine all cuboids and meshes
+    # Combine all cuboids
     all_cuboids = (
         world_cfg_table.cuboid +
-        wall_cfg.cuboid +
-        workbench_cfg.cuboid +
+        wall_cuboids +
         robot_mount_cfg.cuboid
     )
 
-    world_cfg = WorldConfig(cuboid=all_cuboids, mesh=meshes)
+    # Ensure all cuboid poses are consistent Python lists (avoid numpy array mixing)
+    for cuboid in all_cuboids:
+        if hasattr(cuboid, 'pose') and cuboid.pose is not None:
+            cuboid.pose = list(cuboid.pose)
+        if hasattr(cuboid, 'dims') and cuboid.dims is not None:
+            cuboid.dims = list(cuboid.dims)
+
+    # Add target object mesh if provided
+    meshes = []
+    if target_mesh_path is not None:
+        target_mesh = Mesh(
+            name=target_object["name"],
+            file_path=target_mesh_path,
+            pose=list(target_object["position"]) + list(target_object["rotation"]),
+        )
+        meshes.append(target_mesh)
+
+    world_cfg = WorldConfig(cuboid=all_cuboids, mesh=meshes if meshes else None)
 
     return world_cfg
 
@@ -454,26 +454,31 @@ def compute_ik_eaik(
     """
     Compute IK solutions using EAIK (analytical IK solver)
 
+    Input poses are expected to be in camera_optical_frame.
+    This function transforms them to tool0/wrist3 frame before solving IK.
+
     Args:
-        world_matrices: (N, 4, 4) array of world pose matrices
+        world_matrices: (N, 4, 4) array of world pose matrices (camera_optical_frame)
         urdf_path: Path to robot URDF file (default from config)
 
     Returns:
         List of EAIK solution objects
     """
-    if not EAIK_AVAILABLE:
-        raise RuntimeError("EAIK not available")
-
     if urdf_path is None:
         urdf_path = config.DEFAULT_URDF_PATH
 
     if isinstance(world_matrices, torch.Tensor):
-        mats_np = world_matrices.detach().cpu().numpy()
+        mats_np = world_matrices.detach().cpu().numpy().copy()
     else:
-        mats_np = np.asarray(world_matrices)
+        mats_np = np.asarray(world_matrices, dtype=np.float64).copy()
 
     if mats_np.ndim != 3 or mats_np.shape[1:] != (4, 4):
         raise ValueError("Expected poses shaped (batch, 4, 4)")
+
+    # Transform from camera_optical_frame to tool0/wrist3
+    # Move back along Z-axis by TOOL_TO_CAMERA_OPTICAL_OFFSET_M
+    z_axis = mats_np[:, :3, 2]  # Z-axis direction for each pose
+    mats_np[:, :3, 3] -= z_axis * config.TOOL_TO_CAMERA_OPTICAL_OFFSET_M
 
     # Load URDF robot
     bot = UrdfRobot(urdf_path)
@@ -1244,8 +1249,8 @@ def visualize_trajectory(
             mesh = o3d.io.read_triangle_mesh(mesh_path)
             # Transform to world pose
             T = np.eye(4)
-            T[:3, :3] = quaternion_to_rotation_matrix(config.TARGET_OBJECT_ROTATION)
-            T[:3, 3] = config.TARGET_OBJECT_POSITION
+            T[:3, :3] = quaternion_to_rotation_matrix(config.TARGET_OBJECT["rotation"])
+            T[:3, 3] = config.TARGET_OBJECT["position"]
             mesh.transform(T)
             mesh.compute_vertex_normals()
             mesh.paint_uniform_color([0.7, 0.7, 0.7])
@@ -1394,25 +1399,17 @@ def main():
     if not os.path.exists(mesh_path):
         print(f"  ⚠ Mesh file not found: {mesh_path}")
         print(f"  ⚠ Using default world without object mesh")
-        mesh_files = []
-        mesh_file = None
+        target_mesh_path = None
     else:
         print(f"  Using mesh: {mesh_path}")
-        mesh_files = [mesh_path]
-        mesh_file = mesh_path
+        target_mesh_path = mesh_path
 
     world_cfg = setup_collision_world(
-        table_position=config.TABLE_POSITION,
-        table_dimensions=config.TABLE_DIMENSIONS,
-        wall_position=config.WALL_POSITION,
-        wall_dimensions=config.WALL_DIMENSIONS,
-        workbench_position=config.WORKBENCH_POSITION,
-        workbench_dimensions=config.WORKBENCH_DIMENSIONS,
-        robot_mount_position=config.ROBOT_MOUNT_POSITION,
-        robot_mount_dimensions=config.ROBOT_MOUNT_DIMENSIONS,
-        mesh_files=mesh_files,
-        mesh_position=config.TARGET_OBJECT_POSITION,
-        mesh_rotation=config.TARGET_OBJECT_ROTATION
+        table=config.TABLE,
+        walls=config.WALLS,
+        robot_mount=config.ROBOT_MOUNT,
+        target_object=config.TARGET_OBJECT,
+        target_mesh_path=target_mesh_path,
     )
     print(f"  ✓ Collision world ready")
     print()
@@ -1438,8 +1435,8 @@ def main():
 
     # Transform viewpoints to world frame
     target_world_pose = np.eye(4, dtype=np.float64)
-    target_world_pose[:3, :3] = quaternion_to_rotation_matrix(config.TARGET_OBJECT_ROTATION)
-    target_world_pose[:3, 3] = config.TARGET_OBJECT_POSITION
+    target_world_pose[:3, :3] = quaternion_to_rotation_matrix(config.TARGET_OBJECT["rotation"])
+    target_world_pose[:3, 3] = config.TARGET_OBJECT["position"]
 
     for vp in viewpoints:
         vp.world_pose = transform_pose_to_world(vp.local_pose, target_world_pose)
@@ -1522,8 +1519,19 @@ def main():
         print(f"  Replanning: No segments required replanning")
     print()
 
-    # Step 7: Save trajectory
+    # Step 7: Save trajectory (only if no failed segments)
     print("[7/7] Saving trajectory...")
+    if stats['failed_segments']:
+        print(f"  ✗ Cannot save trajectory: {len(stats['failed_segments'])} segments have unresolved collisions")
+        print(f"  ✗ Failed segment indices: {stats['failed_segments']}")
+        print()
+        elapsed = time.time() - start_time
+        print("=" * 60)
+        print("✗ Step 2 Failed - Trajectory not saved due to collisions")
+        print(f"Total time: {elapsed:.1f}s")
+        print("=" * 60)
+        return 1
+
     saved_path = save_trajectory_csv(
         final_trajectory, output_path, clusters, order, picked
     )
@@ -1533,7 +1541,7 @@ def main():
     # Optional visualization
     if args.visualize:
         visualize_trajectory(
-            final_trajectory, clusters, order, picked, mesh_file
+            final_trajectory, clusters, order, picked, target_mesh_path
         )
 
     elapsed = time.time() - start_time

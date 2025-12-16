@@ -40,7 +40,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Tuple, Optional
+from typing import List, Dict, Tuple, Optional
 
 # Third-party
 import numpy as np
@@ -490,23 +490,22 @@ class Viewpoint:
     all_ik_solutions: List[np.ndarray] = field(default_factory=list)
     safe_ik_solutions: List[np.ndarray] = field(default_factory=list)
 
-
 def setup_collision_world(
-    table_position: np.ndarray,
-    table_dimensions: np.ndarray,
-    wall_position: np.ndarray,
-    wall_dimensions: np.ndarray,
-    workbench_position: np.ndarray,
-    workbench_dimensions: np.ndarray,
-    robot_mount_position: np.ndarray,
-    robot_mount_dimensions: np.ndarray,
-    mesh_files: List[str],
-    mesh_position: np.ndarray,
-    mesh_rotation: np.ndarray,
-    verbose: bool = False
+    table: Dict,
+    walls: List[Dict],
+    robot_mount: Dict,
+    target_object: Dict,
+    target_mesh_path: Optional[str] = None,
 ) -> WorldConfig:
     """
     Setup collision world configuration with all obstacles
+
+    Args:
+        table: Table config dict with 'name', 'position', 'dimensions' keys
+        walls: List of wall dicts with 'name', 'position', 'dimensions' keys
+        robot_mount: Robot mount config dict with 'name', 'position', 'dimensions' keys
+        target_object: Target object config dict with 'name', 'position', 'rotation' keys
+        target_mesh_path: Optional path to target object mesh file for collision
 
     Returns:
         WorldConfig containing all configured obstacles
@@ -515,59 +514,58 @@ def setup_collision_world(
     world_cfg_table = WorldConfig.from_dict(
         load_yaml(join_path(get_world_configs_path(), "collision_table.yml"))
     )
-    world_cfg_table.cuboid[0].pose[:3] = table_position
-    world_cfg_table.cuboid[0].dims[:3] = table_dimensions
-    world_cfg_table.cuboid[0].name = "table"
+    world_cfg_table.cuboid[0].pose = list(table["position"]) + [1, 0, 0, 0]
+    world_cfg_table.cuboid[0].dims = list(table["dimensions"])
+    world_cfg_table.cuboid[0].name = table["name"]
 
-    # Add wall cuboid
-    wall_cuboid_dict = {
-        "table": {
-            "dims": wall_dimensions.tolist(),
-            "pose": list(wall_position) + [1, 0, 0, 0]
+    # Add wall cuboids
+    wall_cuboids = []
+    for wall in walls:
+        wall_dict = {
+            "table": {
+                "dims": wall["dimensions"].tolist(),
+                "pose": list(wall["position"]) + [1, 0, 0, 0]
+            }
         }
-    }
-    wall_cfg = WorldConfig.from_dict({"cuboid": wall_cuboid_dict})
-    wall_cfg.cuboid[0].name = "wall"
-
-    # Add workbench cuboid
-    workbench_cuboid_dict = {
-        "table": {
-            "dims": workbench_dimensions.tolist(),
-            "pose": list(workbench_position) + [1, 0, 0, 0]
-        }
-    }
-    workbench_cfg = WorldConfig.from_dict({"cuboid": workbench_cuboid_dict})
-    workbench_cfg.cuboid[0].name = "workbench"
+        wall_cfg = WorldConfig.from_dict({"cuboid": wall_dict})
+        wall_cfg.cuboid[0].name = wall["name"]
+        wall_cuboids.extend(wall_cfg.cuboid)
 
     # Add robot mount cuboid
     robot_mount_cuboid_dict = {
         "table": {
-            "dims": robot_mount_dimensions.tolist(),
-            "pose": list(robot_mount_position) + [1, 0, 0, 0]
+            "dims": robot_mount["dimensions"].tolist(),
+            "pose": list(robot_mount["position"]) + [1, 0, 0, 0]
         }
     }
     robot_mount_cfg = WorldConfig.from_dict({"cuboid": robot_mount_cuboid_dict})
-    robot_mount_cfg.cuboid[0].name = "robot_mount"
+    robot_mount_cfg.cuboid[0].name = robot_mount["name"]
 
-    # Add mesh obstacles
-    meshes = []
-    for i, mesh_file in enumerate(mesh_files):
-        mesh = Mesh(
-            name=f"obstacle_mesh_{i}",
-            file_path=mesh_file,
-            pose=list(mesh_position) + list(mesh_rotation),
-        )
-        meshes.append(mesh)
-
-    # Combine all cuboids and meshes
+    # Combine all cuboids
     all_cuboids = (
         world_cfg_table.cuboid +
-        wall_cfg.cuboid +
-        workbench_cfg.cuboid +
+        wall_cuboids +
         robot_mount_cfg.cuboid
     )
 
-    world_cfg = WorldConfig(cuboid=all_cuboids, mesh=meshes)
+    # Ensure all cuboid poses are consistent Python lists (avoid numpy array mixing)
+    for cuboid in all_cuboids:
+        if hasattr(cuboid, 'pose') and cuboid.pose is not None:
+            cuboid.pose = list(cuboid.pose)
+        if hasattr(cuboid, 'dims') and cuboid.dims is not None:
+            cuboid.dims = list(cuboid.dims)
+
+    # Add target object mesh if provided
+    meshes = []
+    if target_mesh_path is not None:
+        target_mesh = Mesh(
+            name=target_object["name"],
+            file_path=target_mesh_path,
+            pose=list(target_object["position"]) + list(target_object["rotation"]),
+        )
+        meshes.append(target_mesh)
+
+    world_cfg = WorldConfig(cuboid=all_cuboids, mesh=meshes if meshes else None)
 
     return world_cfg
 
@@ -935,18 +933,10 @@ def main():
 
     # Setup world config
     world_cfg = setup_collision_world(
-        table_position=config.TABLE_POSITION,
-        table_dimensions=config.TABLE_DIMENSIONS,
-        wall_position=config.WALL_POSITION,
-        wall_dimensions=config.WALL_DIMENSIONS,
-        workbench_position=config.WORKBENCH_POSITION,
-        workbench_dimensions=config.WORKBENCH_DIMENSIONS,
-        robot_mount_position=config.ROBOT_MOUNT_POSITION,
-        robot_mount_dimensions=config.ROBOT_MOUNT_DIMENSIONS,
-        mesh_files=[],  # No mesh for tilt trajectory
-        mesh_position=config.TARGET_OBJECT_POSITION,
-        mesh_rotation=config.TARGET_OBJECT_ROTATION,
-        verbose=False
+        table=config.TABLE,
+        walls=config.WALLS,
+        robot_mount=config.ROBOT_MOUNT,
+        target_object=config.TARGET_OBJECT,
     )
 
     # Setup IK solver for collision checking

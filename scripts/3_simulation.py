@@ -6,7 +6,8 @@ Usage:
     # Regular trajectory
     /isaac-sim/python.sh scripts/3_simulation.py \
         --object sample \
-        --num_viewpoints 163
+        --num_viewpoints 163 \
+        --visualize_spheres
 
     # Tilt trajectory
     /isaac-sim/python.sh scripts/3_simulation.py \
@@ -29,7 +30,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Deque, List, Tuple, Optional
+from typing import Deque, List, Tuple, Optional, Dict
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -394,158 +395,83 @@ def load_trajectory_csv(
 # ----------------------------------------------------------------------------
 
 def setup_collision_world(
-    table_position: Optional[np.ndarray] = None,
-    table_dimensions: Optional[np.ndarray] = None,
-    wall_position: Optional[np.ndarray] = None,
-    wall_dimensions: Optional[np.ndarray] = None,
-    workbench_position: Optional[np.ndarray] = None,
-    workbench_dimensions: Optional[np.ndarray] = None,
-    robot_mount_position: Optional[np.ndarray] = None,
-    robot_mount_dimensions: Optional[np.ndarray] = None,
-    mesh_files: Optional[List[str]] = None,
-    mesh_position: Optional[np.ndarray] = None,
-    mesh_rotation: Optional[np.ndarray] = None,
-    verbose: bool = True
+    table: Dict,
+    walls: List[Dict],
+    robot_mount: Dict,
+    target_object: Dict,
+    target_mesh_path: Optional[str] = None,
 ) -> WorldConfig:
     """
     Setup collision world configuration with all obstacles
 
-    Creates a WorldConfig containing table, wall, workbench, robot mount cuboids
-    and optional mesh obstacles. All parameters default to values from config.py.
-
     Args:
-        table_position: Table position (x, y, z) in meters
-        table_dimensions: Table dimensions (x, y, z) in meters
-        wall_position: Wall position (x, y, z) in meters
-        wall_dimensions: Wall dimensions (x, y, z) in meters
-        workbench_position: Workbench position (x, y, z) in meters
-        workbench_dimensions: Workbench dimensions (x, y, z) in meters
-        robot_mount_position: Robot mount position (x, y, z) in meters
-        robot_mount_dimensions: Robot mount dimensions (x, y, z) in meters
-        mesh_files: List of paths to obstacle mesh files
-        mesh_position: Position for mesh obstacles (x, y, z) in meters
-        mesh_rotation: Rotation for mesh obstacles as quaternion (w, x, y, z)
-        verbose: Print setup information (default: True)
+        table: Table config dict with 'name', 'position', 'dimensions' keys
+        walls: List of wall dicts with 'name', 'position', 'dimensions' keys
+        robot_mount: Robot mount config dict with 'name', 'position', 'dimensions' keys
+        target_object: Target object config dict with 'name', 'position', 'rotation' keys
+        target_mesh_path: Optional path to target object mesh file for collision
 
     Returns:
         WorldConfig containing all configured obstacles
-
-    Example:
-        >>> world_cfg = setup_collision_world(
-        ...     mesh_files=["data/object/glass.obj"],
-        ...     verbose=True
-        ... )
-        Setting up collision world...
-          Table: [0. 0. 0.] dims=[2. 2. 0.05]
-          ...
     """
-    # Apply config defaults
-    if table_position is None:
-        table_position = config.TABLE_POSITION.copy()
-    if table_dimensions is None:
-        table_dimensions = config.TABLE_DIMENSIONS.copy()
-    if wall_position is None:
-        wall_position = config.WALL_POSITION.copy()
-    if wall_dimensions is None:
-        wall_dimensions = config.WALL_DIMENSIONS.copy()
-    if workbench_position is None:
-        workbench_position = config.WORKBENCH_POSITION.copy()
-    if workbench_dimensions is None:
-        workbench_dimensions = config.WORKBENCH_DIMENSIONS.copy()
-    if robot_mount_position is None:
-        robot_mount_position = config.ROBOT_MOUNT_POSITION.copy()
-    if robot_mount_dimensions is None:
-        robot_mount_dimensions = config.ROBOT_MOUNT_DIMENSIONS.copy()
-    if mesh_position is None:
-        mesh_position = config.TARGET_OBJECT_POSITION.copy()
-    if mesh_rotation is None:
-        mesh_rotation = config.TARGET_OBJECT_ROTATION.copy()
-    if mesh_files is None:
-        mesh_files = []
-
-    if verbose:
-        print("\nSetting up collision world...")
-
     # Load base world config (table)
     world_cfg_table = WorldConfig.from_dict(
         load_yaml(join_path(get_world_configs_path(), "collision_table.yml"))
     )
-    world_cfg_table.cuboid[0].pose[:3] = table_position
-    world_cfg_table.cuboid[0].dims[:3] = table_dimensions
-    world_cfg_table.cuboid[0].name = "table"
+    world_cfg_table.cuboid[0].pose = list(table["position"]) + [1, 0, 0, 0]
+    world_cfg_table.cuboid[0].dims = list(table["dimensions"])
+    world_cfg_table.cuboid[0].name = table["name"]
 
-    if verbose:
-        print(f"  Table: pos={table_position}, dims={table_dimensions}")
-
-    # Add wall cuboid
-    wall_cuboid_dict = {
-        "table": {
-            "dims": wall_dimensions.tolist(),
-            "pose": list(wall_position) + [1, 0, 0, 0]
+    # Add wall cuboids
+    wall_cuboids = []
+    for wall in walls:
+        wall_dict = {
+            "table": {
+                "dims": wall["dimensions"].tolist(),
+                "pose": list(wall["position"]) + [1, 0, 0, 0]
+            }
         }
-    }
-    wall_cfg = WorldConfig.from_dict({"cuboid": wall_cuboid_dict})
-    wall_cfg.cuboid[0].name = "wall"
-
-    if verbose:
-        print(f"  Wall: pos={wall_position}, dims={wall_dimensions}")
-
-    # Add workbench cuboid
-    workbench_cuboid_dict = {
-        "table": {
-            "dims": workbench_dimensions.tolist(),
-            "pose": list(workbench_position) + [1, 0, 0, 0]
-        }
-    }
-    workbench_cfg = WorldConfig.from_dict({"cuboid": workbench_cuboid_dict})
-    workbench_cfg.cuboid[0].name = "workbench"
-
-    if verbose:
-        print(f"  Workbench: pos={workbench_position}, dims={workbench_dimensions}")
+        wall_cfg = WorldConfig.from_dict({"cuboid": wall_dict})
+        wall_cfg.cuboid[0].name = wall["name"]
+        wall_cuboids.extend(wall_cfg.cuboid)
 
     # Add robot mount cuboid
     robot_mount_cuboid_dict = {
         "table": {
-            "dims": robot_mount_dimensions.tolist(),
-            "pose": list(robot_mount_position) + [1, 0, 0, 0]
+            "dims": robot_mount["dimensions"].tolist(),
+            "pose": list(robot_mount["position"]) + [1, 0, 0, 0]
         }
     }
     robot_mount_cfg = WorldConfig.from_dict({"cuboid": robot_mount_cuboid_dict})
-    robot_mount_cfg.cuboid[0].name = "robot_mount"
+    robot_mount_cfg.cuboid[0].name = robot_mount["name"]
 
-    if verbose:
-        print(f"  Robot mount: pos={robot_mount_position}, dims={robot_mount_dimensions}")
-
-    # Add mesh obstacles
-    meshes = []
-    for i, mesh_file in enumerate(mesh_files):
-        mesh = Mesh(
-            name=f"obstacle_mesh_{i}",
-            file_path=mesh_file,
-            pose=list(mesh_position) + list(mesh_rotation),  # position + quat (w,x,y,z)
-        )
-        meshes.append(mesh)
-        if verbose:
-            print(f"  Mesh {i}: {mesh_file} at pos={mesh_position}")
-
-    # Combine all cuboids and meshes
+    # Combine all cuboids
     all_cuboids = (
         world_cfg_table.cuboid +
-        wall_cfg.cuboid +
-        workbench_cfg.cuboid +
+        wall_cuboids +
         robot_mount_cfg.cuboid
     )
 
-    world_cfg = WorldConfig(
-        cuboid=all_cuboids,
-        mesh=meshes
-    )
+    # Ensure all cuboid poses are consistent Python lists (avoid numpy array mixing)
+    for cuboid in all_cuboids:
+        if hasattr(cuboid, 'pose') and cuboid.pose is not None:
+            cuboid.pose = list(cuboid.pose)
+        if hasattr(cuboid, 'dims') and cuboid.dims is not None:
+            cuboid.dims = list(cuboid.dims)
 
-    if verbose:
-        print(f"  Total obstacles: {len(all_cuboids)} cuboids + {len(meshes)} meshes")
+    # Add target object mesh if provided
+    meshes = []
+    if target_mesh_path is not None:
+        target_mesh = Mesh(
+            name=target_object["name"],
+            file_path=target_mesh_path,
+            pose=list(target_object["position"]) + list(target_object["rotation"]),
+        )
+        meshes.append(target_mesh)
+
+    world_cfg = WorldConfig(cuboid=all_cuboids, mesh=meshes if meshes else None)
 
     return world_cfg
-
 
 # ----------------------------------------------------------------------------
 # Section 3.4: Simulation Helper (from common/simulation_helper.py)
@@ -762,15 +688,15 @@ def setup_object_from_mesh(
 
     print_section_header("ADDING OBJECT MESH TO STAGE", width=70)
     print_key_value("Mesh file", mesh_path)
-    print_key_value("Position", config.TARGET_OBJECT_POSITION)
+    print_key_value("Position", config.TARGET_OBJECT["position"])
     print()
 
     usd_helper.load_stage(my_world.stage)
 
     target_object_mesh = Mesh(
-        name="target_object",
+        name=config.TARGET_OBJECT["name"],
         file_path=mesh_path,
-        pose=list(config.TARGET_OBJECT_POSITION) + list(config.TARGET_OBJECT_ROTATION),
+        pose=list(config.TARGET_OBJECT["position"]) + list(config.TARGET_OBJECT["rotation"]),
         color=[1.0, 0.1, 0.1, 0.95]
     )
 
@@ -817,7 +743,8 @@ def setup_camera(robot_prim_path: str, my_world: World):
 
 def setup_collision_checker(
     my_world: World,
-    robot_state: dict
+    robot_state: dict,
+    mesh_path: Optional[str] = None,
 ) -> IKSolver:
     """Setup collision checker and IK solver"""
     usd_helper = UsdHelper()
@@ -828,16 +755,11 @@ def setup_collision_checker(
 
     # Setup world collision configuration using inlined utility
     world_cfg = setup_collision_world(
-        table_position=config.TABLE_POSITION,
-        table_dimensions=config.TABLE_DIMENSIONS,
-        wall_position=config.WALL_POSITION,
-        wall_dimensions=config.WALL_DIMENSIONS,
-        workbench_position=config.WORKBENCH_POSITION,
-        workbench_dimensions=config.WORKBENCH_DIMENSIONS,
-        robot_mount_position=config.ROBOT_MOUNT_POSITION,
-        robot_mount_dimensions=config.ROBOT_MOUNT_DIMENSIONS,
-        mesh_files=[],  # No mesh obstacles for visualization
-        verbose=False
+        table=config.TABLE,
+        walls=config.WALLS,
+        robot_mount=config.ROBOT_MOUNT,
+        target_object=config.TARGET_OBJECT,
+        target_mesh_path=mesh_path,
     )
 
     # Add ground mesh (positioned below ground)
@@ -899,7 +821,7 @@ def initialize_simulation(mesh_path: str, robot_config_file: str) -> WorldState:
     target_object_prim = setup_object_from_mesh(my_world, mesh_path, usd_helper)
 
     camera = setup_camera(robot_state['robot_prim_path'], my_world)
-    ik_solver = setup_collision_checker(my_world, robot_state)
+    ik_solver = setup_collision_checker(my_world, robot_state, mesh_path)
 
     return WorldState(
         world=my_world,
