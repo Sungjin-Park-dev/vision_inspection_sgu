@@ -8,7 +8,7 @@ set -e  # 에러 나면 바로 종료
 # cuRobo가 포함된 Isaac Sim 이미지 이름
 IMAGE_NAME=${ISAAC_CUROBO_IMAGE:-isaac_curobo:image}
 
-# Dockerfile 경로 (지금 네가 만든 cuRobo 포함 Dockerfile)
+# Dockerfile 경로
 DOCKERFILE_PATH=${CUROBO_DOCKERFILE:-./isaac_curobo.dockerfile}
 
 # IsaacSim-ros_workspaces를 clone & build 할 위치

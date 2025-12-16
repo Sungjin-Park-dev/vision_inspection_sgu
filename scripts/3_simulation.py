@@ -6,8 +6,7 @@ Usage:
     # Regular trajectory
     /isaac-sim/python.sh scripts/3_simulation.py \
         --object sample \
-        --num_viewpoints 163 \
-        --visualize_spheres
+        --num_viewpoints 163
 
     # Tilt trajectory
     /isaac-sim/python.sh scripts/3_simulation.py \
@@ -92,8 +91,7 @@ parser.add_argument(
 parser.add_argument(
     "--robot",
     type=str,
-    default="ur20.yml",
-    help="Robot configuration file (default: ur20.yml)"
+    default="ur20_with_camera.yml"
 )
 
 parser.add_argument(

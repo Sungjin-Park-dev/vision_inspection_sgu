@@ -67,8 +67,8 @@ ROBOT_MOUNT_DIMENSIONS = np.array([0.3, 0.3, 0.5], dtype=np.float64)
 # Robot Configuration
 # ============================================================================
 
-DEFAULT_ROBOT_CONFIG = "ur20.yml"
-DEFAULT_URDF_PATH = "/curobo/src/curobo/content/assets/robot/ur_description/ur20.urdf"
+DEFAULT_ROBOT_CONFIG = "ur20_with_camera.yml"
+DEFAULT_URDF_PATH = "/curobo/src/curobo/content/assets/robot/ur_description/ur20_with_camera.urdf"
 
 
 # ============================================================================
