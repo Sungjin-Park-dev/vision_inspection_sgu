@@ -35,14 +35,14 @@ CAMERA_OVERLAP_RATIO = 0.5
 # Target object configuration
 TARGET_OBJECT = {
     "name": "target_object",
-    "position": np.array([0.00, 1.09 + 0.13, 0.8 - 0.8], dtype=np.float64),
+    "position": np.array([0.00, 1.09 + 0.13, 0.88 - 0.8], dtype=np.float64),
     "rotation": np.array([0.7071, 0.0, 0.0, 0.7071], dtype=np.float64),  # quaternion: w, x, y, z
 }
 
 # Table cuboid configuration
 TABLE = {
     "name": "table",
-    "position": np.array([0.0, 1.09 + 0.05, 0.365 - 0.8], dtype=np.float64),
+    "position": np.array([0.0, 1.09 + 0.5, 0.365 - 0.8], dtype=np.float64),
     "dimensions": np.array([1.0, 0.6, 0.5], dtype=np.float64),
 }
 
