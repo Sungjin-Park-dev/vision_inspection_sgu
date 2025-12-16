@@ -14,8 +14,8 @@ UR20 로봇을 사용한 비전 검사 자동화 시스템
 - **OS**: Ubuntu 22.04
 - **GPU**: NVIDIA GPU (CUDA 지원 필수)
 - **Software**:
-  - Docker
-  - NVIDIA Container Toolkit
+  - Docker / NVIDIA Container Toolkit
+  - Isaac Sim / cuRobo
 
 ## 설치 방법
 
