@@ -45,6 +45,9 @@ WORKDIR /curobo
 
 RUN /isaac-sim/python.sh -m pip install -e ".[isaacsim]" --no-build-isolation
 
+WORKDIR /curobo
+RUN /isaac-sim/python.sh -m pip install open3d EAIK h5py
+
 # vision_inspection_sgu 로컬 파일 복사 (robot description)
 COPY ur20_description/ur20_with_camera.yml /curobo/src/curobo/content/configs/robot/
 COPY ur20_description/ur20_with_camera.urdf /curobo/src/curobo/content/assets/robot/ur_description/
@@ -56,10 +59,6 @@ WORKDIR /curobo/vision_inspection_sgu
 COPY common/ ./common/
 COPY data/ ./data/
 COPY scripts/ ./scripts/
-
-WORKDIR /curobo
-RUN /isaac-sim/python.sh -m pip install open3d EAIK h5py
-
 
 # Isaac + ROS 환경변수 및 ROS workspace source를 bashrc에 추가
 RUN echo 'export ISAAC_SIM_PACKAGE_PATH=/isaac-sim' >> /root/.bashrc && \

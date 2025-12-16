@@ -30,6 +30,18 @@ if [ ! -d "$ROS_WS_DIR" ]; then
   echo "  IsaacSim-ros_workspaces 를 아직 빌드하지 않았을 수도 있습니다."
 fi
 
+########################################
+# X11 설정 (GUI를 위해 필요)
+########################################
+
+# xhost 명령어로 Docker 컨테이너의 X11 접근 허용
+if command -v xhost > /dev/null 2>&1; then
+  echo "[run_isaac_curobo] X11 forwarding 설정 중..."
+  xhost +local:docker > /dev/null 2>&1 || echo "  WARNING: xhost 설정 실패 (GUI가 안 뜰 수 있음)"
+else
+  echo "[run_isaac_curobo] WARNING: xhost 명령어를 찾을 수 없습니다. GUI가 필요하면 수동으로 'xhost +local:docker'를 실행하세요."
+fi
+
 if [ ! -f "$XAUTH" ]; then
   echo "[run_isaac_curobo] WARNING: Xauthority 파일 '$XAUTH' 를 찾을 수 없습니다."
   echo "  GUI가 안 뜰 수도 있습니다. (headless라면 무시해도 됨)"
