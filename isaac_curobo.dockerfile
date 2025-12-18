@@ -66,7 +66,8 @@ RUN echo 'export ISAAC_SIM_PACKAGE_PATH=/isaac-sim' >> /root/.bashrc && \
     echo 'export RMW_IMPLEMENTATION=rmw_fastrtps_cpp' >> /root/.bashrc && \
     echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ISAAC_SIM_PACKAGE_PATH}/exts/isaacsim.ros2.bridge/humble/lib' >> /root/.bashrc && \
     echo 'export COLCON_PYTHON_EXECUTABLE=${ISAAC_SIM_PACKAGE_PATH}/python.sh' >> /root/.bashrc && \
-    echo 'export FASTRTPS_DEFAULT_PROFILES_FILE=${FASTRTPS_DEFAULT_PROFILES_FILE:-/root/.ros/fastdds.xml}' >> /root/.bashrc && \
+    # echo 'export FASTRTPS_DEFAULT_PROFILES_FILE=${FASTRTPS_DEFAULT_PROFILES_FILE:-/root/.ros/fastdds.xml}' >> /root/.bashrc && \
+    echo 'export FASTRTPS_DEFAULT_PROFILES_FILE=${FASTRTPS_DEFAULT_PROFILES_FILE::-/workspace/IsaacSim-ros_workspaces/humble_ws/fastdds.xml}' >> /root/.bashrc && \
     echo 'export ROS_WS_ROOT=${ROS_WS_ROOT:-/workspace/IsaacSim-ros_workspaces}' >> /root/.bashrc && \
     echo 'source "${ROS_WS_ROOT}/build_ws/humble/humble_ws/install/local_setup.bash"' >> /root/.bashrc && \
     echo 'source "${ROS_WS_ROOT}/build_ws/humble/isaac_sim_ros_ws/install/local_setup.bash"' >> /root/.bashrc && \
