@@ -1,52 +1,52 @@
 #!/usr/bin/env python3
-"""Camera configuration for vision inspection pipeline
+"""비전 검사 파이프라인 설정
 
-All measurements in millimeters (mm) unless otherwise specified.
+별도 명시가 없는 한 모든 측정값은 밀리미터(mm) 단위입니다.
 """
 
 import numpy as np
 from pathlib import Path
 
 # ============================================================================
-# Project Paths
+# 프로젝트 경로
 # ============================================================================
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_ROOT = PROJECT_ROOT / "data"
 
 # ============================================================================
-# Camera Specifications
+# 카메라 사양
 # ============================================================================
 
-# Camera Field of View (mm)
+# 카메라 시야각 (mm)
 CAMERA_FOV_WIDTH_MM = 41.0
 CAMERA_FOV_HEIGHT_MM = 30.0
 
-# Working distance (mm) - distance from camera to surface
+# 작업 거리 (mm) - 카메라에서 표면까지의 거리
 CAMERA_WORKING_DISTANCE_MM = 110.0
 
-# Overlap ratio between adjacent viewpoints (0.5 = 50% overlap)
+# 인접 뷰포인트 간 중첩 비율 (0.5 = 50% 중첩)
 CAMERA_OVERLAP_RATIO = 0.5
 
 
 # ============================================================================
-# World Configuration (Isaac Sim coordinates, meters)
+# 월드 설정 (Isaac Sim 좌표계, 미터 단위)
 # ============================================================================
 
-# Target object configuration
+# 대상 객체 설정
 TARGET_OBJECT = {
     "name": "target_object",
     "position": np.array([0.00, 1.09 + 0.13, 0.88 - 0.8], dtype=np.float64),
-    "rotation": np.array([0.7071, 0.0, 0.0, 0.7071], dtype=np.float64),  # quaternion: w, x, y, z
+    "rotation": np.array([0.7071, 0.0, 0.0, 0.7071], dtype=np.float64),  # 쿼터니언: w, x, y, z
 }
 
-# Table cuboid configuration
+# 테이블 직육면체 설정
 TABLE = {
     "name": "table",
     "position": np.array([0.0, 1.09 + 0.5, 0.365 - 0.8], dtype=np.float64),
     "dimensions": np.array([1.0, 0.6, 0.5], dtype=np.float64),
 }
 
-# Wall (Fence) cuboid configuration - 4 walls surrounding the workspace
+# 벽(펜스) 직육면체 설정 - 작업 공간을 둘러싼 4개의 벽
 WALLS = [
     {
         "name": "wall_front",
@@ -70,7 +70,7 @@ WALLS = [
     },
 ]
 
-# Robot mount (base) configuration
+# 로봇 마운트(베이스) 설정
 ROBOT_MOUNT = {
     "name": "robot_mount",
     "position": np.array([0.0, 0.0, -0.25], dtype=np.float64),
@@ -79,32 +79,32 @@ ROBOT_MOUNT = {
 
 
 # ============================================================================
-# Robot Configuration
+# 로봇 설정
 # ============================================================================
 
 
 DEFAULT_ROBOT_CONFIG = "ur20_with_camera.yml"
 DEFAULT_URDF_PATH = "/curobo/src/curobo/content/assets/robot/ur_description/ur20_with_camera.urdf"
 
-# Tool offset: distance from tool0/wrist3 to camera_optical_frame (meters)
-# End-Effector로부터 카메라 초점까지의 실제 거리로 바뀌어야 합니ㅏ다.
+# 툴 오프셋: tool0/wrist3에서 camera_optical_frame까지의 거리 (미터)
+# End-Effector로부터 카메라 초점까지의 실제 거리로 변경해야 합니다.
 TOOL_TO_CAMERA_OPTICAL_OFFSET_M = 0.234
 
 
 # ============================================================================
-# IK Solver Parameters
+# IK 솔버 파라미터
 # ============================================================================
 
 IK_NUM_SEEDS = 32
 
 # ============================================================================
-# GTSP optimization defaults (not in config)
+# GTSP 최적화 기본값
 # ============================================================================
 DEFAULT_KNN = 10
 DEFAULT_LAMBDA_ROT = 1.0
 
 # ============================================================================
-# Collision Checking Parameters
+# 충돌 검사 파라미터
 # ============================================================================
 
 COLLISION_MARGIN = 0.0
@@ -113,71 +113,71 @@ COLLISION_INTERP_EXCLUDE_LAST_JOINT = True
 
 
 # ============================================================================
-# Replanning Parameters
+# 재계획 파라미터
 # ============================================================================
 
 REPLAN_ENABLED = True
 REPLAN_MAX_ATTEMPTS = 60
-REPLAN_TIMEOUT = 10.0  # seconds
+REPLAN_TIMEOUT = 10.0  # 초
 REPLAN_INTERP_DT = 0.02
 REPLAN_TRAJOPT_TSTEPS = 32
 
 
 # ============================================================================
-# Object-Based Data Path Helpers
+# 객체 기반 데이터 경로 헬퍼 함수
 # ============================================================================
 
 def get_mesh_path(object_name: str, filename: str = None, mesh_type: str = "target") -> Path:
     """
-    Get path to object mesh file
+    객체 메시 파일 경로 반환
 
     Args:
-        object_name: Name of the object (e.g., "glass", "phone")
-        filename: Explicit mesh filename (overrides mesh_type if provided)
-        mesh_type: Type of mesh file (default: "target")
-            - "source": source.obj (full multi-material mesh for collision checking)
-            - "target": target.ply (inspection surface for viewpoint sampling)
+        object_name: 객체 이름 (예: "glass", "phone")
+        filename: 명시적 메시 파일명 (지정 시 mesh_type 무시)
+        mesh_type: 메시 파일 유형 (기본값: "target")
+            - "source": source.obj (충돌 검사용 전체 멀티 머티리얼 메시)
+            - "target": target.ply (뷰포인트 샘플링용 검사 표면)
 
     Returns:
-        Path to mesh file: data/{object_name}/mesh/{filename}
+        메시 파일 경로: data/{object_name}/mesh/{filename}
 
     Examples:
-        >>> get_mesh_path("glass")  # Default: target mesh
-        PosixPath('data/glass/mesh/target.ply')  # or target.obj if .ply doesn't exist
+        >>> get_mesh_path("glass")  # 기본값: 타겟 메시
+        PosixPath('data/glass/mesh/target.ply')  # .ply가 없으면 target.obj
 
-        >>> get_mesh_path("glass", mesh_type="source")  # Full mesh for collision
+        >>> get_mesh_path("glass", mesh_type="source")  # 충돌용 전체 메시
         PosixPath('data/glass/mesh/source.obj')
 
-        >>> get_mesh_path("glass", filename="custom.obj")  # Explicit filename
+        >>> get_mesh_path("glass", filename="custom.obj")  # 명시적 파일명
         PosixPath('data/glass/mesh/custom.obj')
     """
     if filename is None:
-        # Auto-determine filename based on mesh_type
+        # mesh_type에 따라 파일명 자동 결정
         if mesh_type == "source":
             filename = "source.obj"
         elif mesh_type == "target":
-            # Try target.ply first (preferred for inspection), fallback to target.obj
+            # target.ply 우선 시도 (검사용 선호), target.obj로 폴백
             target_ply = DATA_ROOT / object_name / "mesh" / "target.ply"
             if target_ply.exists():
                 return target_ply
             filename = "target.obj"
         else:
-            raise ValueError(f"Invalid mesh_type: '{mesh_type}'. Must be 'source' or 'target'")
+            raise ValueError(f"잘못된 mesh_type: '{mesh_type}'. 'source' 또는 'target'이어야 합니다")
 
     return DATA_ROOT / object_name / "mesh" / filename
 
 
 def get_viewpoint_path(object_name: str, num_viewpoints: int, filename: str = "viewpoints.h5") -> Path:
     """
-    Get path to viewpoints file
+    뷰포인트 파일 경로 반환
 
     Args:
-        object_name: Name of the object (e.g., "glass")
-        num_viewpoints: Number of viewpoints
-        filename: Filename (default: "viewpoints.h5")
+        object_name: 객체 이름 (예: "glass")
+        num_viewpoints: 뷰포인트 개수
+        filename: 파일명 (기본값: "viewpoints.h5")
 
     Returns:
-        Path to viewpoints: data/{object_name}/viewpoint/{num_viewpoints}/{filename}
+        뷰포인트 경로: data/{object_name}/viewpoint/{num_viewpoints}/{filename}
 
     Example:
         >>> get_viewpoint_path("glass", 500)
@@ -188,15 +188,15 @@ def get_viewpoint_path(object_name: str, num_viewpoints: int, filename: str = "v
 
 def get_ik_path(object_name: str, num_viewpoints: int, filename: str = "ik_solutions.h5") -> Path:
     """
-    Get path to IK solutions file
+    IK 솔루션 파일 경로 반환
 
     Args:
-        object_name: Name of the object (e.g., "glass")
-        num_viewpoints: Number of viewpoints
-        filename: Filename (default: "ik_solutions.h5")
+        object_name: 객체 이름 (예: "glass")
+        num_viewpoints: 뷰포인트 개수
+        filename: 파일명 (기본값: "ik_solutions.h5")
 
     Returns:
-        Path to IK solutions: data/{object_name}/ik/{num_viewpoints}/{filename}
+        IK 솔루션 경로: data/{object_name}/ik/{num_viewpoints}/{filename}
 
     Example:
         >>> get_ik_path("glass", 500)
@@ -207,15 +207,15 @@ def get_ik_path(object_name: str, num_viewpoints: int, filename: str = "ik_solut
 
 def get_trajectory_path(object_name: str, num_viewpoints: int, filename: str = "gtsp.csv") -> Path:
     """
-    Get path to trajectory file
+    궤적 파일 경로 반환
 
     Args:
-        object_name: Name of the object (e.g., "glass")
-        num_viewpoints: Number of viewpoints
-        filename: Filename (default: "gtsp.csv", can also be "gtsp_final.csv")
+        object_name: 객체 이름 (예: "glass")
+        num_viewpoints: 뷰포인트 개수
+        filename: 파일명 (기본값: "gtsp.csv", "gtsp_final.csv"도 가능)
 
     Returns:
-        Path to trajectory: data/{object_name}/trajectory/{num_viewpoints}/{filename}
+        궤적 경로: data/{object_name}/trajectory/{num_viewpoints}/{filename}
 
     Example:
         >>> get_trajectory_path("glass", 500)
