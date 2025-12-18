@@ -32,7 +32,7 @@ omni_python scripts/2_generate_trajectory.py \
 
 # 3단계: 시뮬레이션
 omni_python scripts/3_simulation.py \
-    --object sample --num_viewpoints 163 --visualize_spheres
+    --object sample --num_viewpoints 163
 
 # 4단계: 생성된 궤적으로 ROS로 퍼블리시
 omni_python scripts/4_publish_trajectory.py \
