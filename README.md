@@ -1,7 +1,4 @@
-# Vision Inspection SGU
-
-UR20 로봇을 사용한 비전 검사 자동화 시스템
-
+# GTSP Trajectory
 ## 주요 기능
 
 - 검사 대상 표면 자동 추출 및 뷰포인트 생성
@@ -15,7 +12,7 @@ UR20 로봇을 사용한 비전 검사 자동화 시스템
 - **GPU**: NVIDIA GPU (CUDA 지원 필수)
 - **Software**:
   - Docker / NVIDIA Container Toolkit
-  - Isaac Sim / cuRobo
+  - Isaac Sim 5.0 / cuRobo
 
 ## 설치 방법
 
@@ -25,7 +22,7 @@ Docker, NVIDIA Container Toolkit을 설치합니다:
 
 ```bash
 # 공식 가이드 참고
-# https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/install_container.html
+https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/install_container.html
 ```
 
 ### 2. Docker 이미지 빌드
@@ -38,8 +35,7 @@ Docker, NVIDIA Container Toolkit을 설치합니다:
 
 **이 스크립트가 하는 일:**
 - Isaac Sim + cuRobo Docker 이미지 빌드 (isaac_curobo:image)
-- IsaacSim-ros_workspaces 클론 및 빌드
-- 필요한 Python 패키지 설치 (open3d, EAIK, h5py 등)
+- 최초 1회 실행
 
 **소요 시간:** 첫 빌드 시 30분~1시간 이상 소요될 수 있습니다.
 
@@ -57,7 +53,7 @@ Docker, NVIDIA Container Toolkit을 설치합니다:
 
 ```bash
 # 프로젝트 디렉토리로 이동
-cd /curobo/vision_inspection_sgu
+cd /curobo/gtsp_trajectory
 
 # 스크립트 실행 (자세한 내용은 scripts/README.md 참고)
 /isaac-sim/python.sh scripts/1_create_viewpoint.py
@@ -66,12 +62,6 @@ cd /curobo/vision_inspection_sgu
 ### 코드 수정 반영
 
 프로젝트 폴더가 volume mount로 연결되어 있어, 호스트에서 코드를 수정하면 컨테이너에 즉시 반영됩니다.
-
-```
-호스트: ./scripts/  →  컨테이너: /curobo/vision_inspection_sgu/scripts/
-호스트: ./common/   →  컨테이너: /curobo/vision_inspection_sgu/common/
-호스트: ./data/     →  컨테이너: /curobo/vision_inspection_sgu/data/
-```
 
 **이미지 재빌드가 필요한 경우:**
 - Dockerfile 자체 변경 (패키지 추가, 환경 설정 등)
