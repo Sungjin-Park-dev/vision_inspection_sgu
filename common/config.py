@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""비전 검사 파이프라인 설정
-
-별도 명시가 없는 한 모든 측정값은 밀리미터(mm) 단위입니다.
-"""
-
 import numpy as np
 from pathlib import Path
 
@@ -82,7 +77,7 @@ ROBOT_MOUNT = {
 # 로봇 설정
 # ============================================================================
 
-
+# cuRobo와 EAIK에서 사용되는 로봇 설정 파일
 DEFAULT_ROBOT_CONFIG = "ur20_with_camera.yml"
 DEFAULT_URDF_PATH = "/curobo/src/curobo/content/assets/robot/ur_description/ur20_with_camera.urdf"
 
@@ -90,12 +85,6 @@ DEFAULT_URDF_PATH = "/curobo/src/curobo/content/assets/robot/ur_description/ur20
 # End-Effector로부터 카메라 초점까지의 실제 거리로 변경해야 합니다.
 TOOL_TO_CAMERA_OPTICAL_OFFSET_M = 0.234
 
-
-# ============================================================================
-# IK 솔버 파라미터
-# ============================================================================
-
-IK_NUM_SEEDS = 32
 
 # ============================================================================
 # GTSP 최적화 기본값
@@ -108,8 +97,8 @@ DEFAULT_LAMBDA_ROT = 1.0
 # ============================================================================
 
 COLLISION_MARGIN = 0.0
-COLLISION_ADAPTIVE_MAX_JOINT_STEP_DEG = 0.05
-COLLISION_INTERP_EXCLUDE_LAST_JOINT = True
+COLLISION_ADAPTIVE_MAX_JOINT_STEP_DEG = 0.05  # 1 step 당 최대 인동 joint 값
+COLLISION_INTERP_EXCLUDE_LAST_JOINT = True # End-Effector 회전 무시
 
 
 # ============================================================================
