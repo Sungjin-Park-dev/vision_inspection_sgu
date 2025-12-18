@@ -44,8 +44,6 @@ RUN git clone https://github.com/NVlabs/curobo.git
 WORKDIR /curobo
 
 RUN /isaac-sim/python.sh -m pip install -e ".[isaacsim]" --no-build-isolation
-
-WORKDIR /curobo
 RUN /isaac-sim/python.sh -m pip install open3d EAIK h5py
 
 # 로컬 파일 복사 (robot description)
