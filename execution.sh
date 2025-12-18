@@ -12,6 +12,9 @@ CONTAINER_NAME=${ISAAC_CONTAINER_NAME:-isaac_curobo_container}
 # IsaacSim-ros_workspaces 위치 (설치 스크립트와 동일하게)
 ROS_WS_DIR=${ISAAC_ROS_WS_DIR:-$HOME/IsaacSim-ros_workspaces}
 
+# 프로젝트 폴더 (이 스크립트가 있는 디렉토리)
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Xauthority (GUI를 위해 필요)
 XAUTH=${XAUTHORITY:-$HOME/.Xauthority}
 
@@ -48,21 +51,14 @@ if [ ! -f "$XAUTH" ]; then
 fi
 
 ########################################
-# 기존 컨테이너 정리 (있으면)
+# 기존 컨테이너 처리
 ########################################
 
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"; then
   echo "[run_isaac_curobo] 기존 컨테이너 '$CONTAINER_NAME' 발견."
-
-  if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}\$"; then
-    echo "  -> 실행 중인 컨테이너에 접속합니다."
-    docker exec -it "$CONTAINER_NAME" bash
-    exit 0
-  else
-    echo "  -> 정지된 컨테이너를 다시 시작합니다."
-    docker start -ai "$CONTAINER_NAME"
-    exit 0
-  fi
+  echo "  -> Volume mount 적용을 위해 기존 컨테이너를 삭제하고 새로 생성합니다."
+  docker stop "$CONTAINER_NAME" 2>/dev/null || true
+  docker rm "$CONTAINER_NAME"
 fi
 
 ########################################
@@ -73,6 +69,7 @@ echo "[run_isaac_curobo] 컨테이너 실행:"
 echo "  IMAGE    : $IMAGE_NAME"
 echo "  NAME     : $CONTAINER_NAME"
 echo "  ROS WS   : $ROS_WS_DIR"
+echo "  PROJECT  : $PROJECT_DIR -> /curobo/gtsp_trajectory"
 
 docker run --name "$CONTAINER_NAME" --entrypoint bash -it\
   --runtime=nvidia --gpus all \
@@ -90,4 +87,5 @@ docker run --name "$CONTAINER_NAME" --entrypoint bash -it\
   -v ~/docker/isaac-sim/data:/root/.local/share/ov/data:rw \
   -v ~/docker/isaac-sim/documents:/root/Documents:rw \
   -v "$ROS_WS_DIR":/workspace/IsaacSim-ros_workspaces:rw \
+  -v "$PROJECT_DIR":/curobo/vision_inspection_sgu:rw \
   $IMAGE_NAME

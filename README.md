@@ -63,23 +63,23 @@ cd /curobo/vision_inspection_sgu
 /isaac-sim/python.sh scripts/1_create_viewpoint.py
 ```
 
-### 컨테이너 재접속
+### 코드 수정 반영
 
-`execution.sh`를 다시 실행하면:
-- 기존 컨테이너가 실행 중이면 → 접속
-- 기존 컨테이너가 정지되어 있으면 → 재시작 후 접속
-- 컨테이너가 없으면 → 새로 생성
+프로젝트 폴더가 volume mount로 연결되어 있어, 호스트에서 코드를 수정하면 컨테이너에 즉시 반영됩니다.
+
+```
+호스트: ./scripts/  →  컨테이너: /curobo/vision_inspection_sgu/scripts/
+호스트: ./common/   →  컨테이너: /curobo/vision_inspection_sgu/common/
+호스트: ./data/     →  컨테이너: /curobo/vision_inspection_sgu/data/
+```
+
+**이미지 재빌드가 필요한 경우:**
+- Dockerfile 자체 변경 (패키지 추가, 환경 설정 등)
+- `ur20_description/` 로봇 설정 변경
+
+**재빌드 없이 즉시 반영:**
+- `scripts/`, `common/`, `data/` 코드 변경
 
 ## 사용 방법
 
 비전 검사 파이프라인 사용 방법은 [scripts/README.md](scripts/README.md)를 참고하세요.
-
-### 기존 컨테이너 삭제
-
-컨테이너 외부에서 코드를 수정한 후 다시 반영하려면, 기존 컨테이너를 삭제하고 `execution.sh`를 다시 실행해야 합니다:
-
-```bash
-docker stop isaac_curobo_container
-docker rm isaac_curobo_container
-./execution.sh
-```

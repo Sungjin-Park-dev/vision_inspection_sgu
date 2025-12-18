@@ -54,11 +54,10 @@ COPY ur20_description/ur20_with_camera.urdf /curobo/src/curobo/content/assets/ro
 COPY ur20_description/ur20 /curobo/src/curobo/content/assets/robot/ur_description/meshes/ur20
 COPY ur20_description/camera /curobo/src/curobo/content/assets/robot/ur_description/meshes/camera
 
-# gtsp_trajectory 프로젝트 폴더 복사
+# 프로젝트 작업 디렉토리 생성 (실제 파일은 volume mount로 연결됨)
 WORKDIR /curobo/gtsp_trajectory
-COPY common/ ./common/
-COPY data/ ./data/
-COPY scripts/ ./scripts/
+
+# ROS2 FastDDS 설정 파일 복사
 COPY fastdds.xml /root/.ros/fastdds.xml
 
 # Isaac + ROS 환경변수 및 ROS workspace source를 bashrc에 추가
