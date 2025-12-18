@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 """
-Create Viewpoints from Multi-Material Mesh
+Create Viewpoints from Mesh
 
 Simplified unified script combining:
-- Multi-material OBJ preprocessing
+- Multi-material OBJ preprocessing (optional)
 - Uniform Poisson disk sampling for viewpoint generation
 
-Input: Multi-material OBJ file + material RGB color
+Input: OBJ file (optionally with material RGB color filter)
 Output: HDF5 file with surface positions and normals
 
 Usage:
+    # 특정 material만 선택하여 뷰포인트 생성
     omni_python scripts/1_create_viewpoint.py \
-    --object sample \
-    --material-rgb "170,163,158" \
-    --visualize
+        --object sample \
+        --material-rgb "170,163,158" \
+        --visualize
+    
+    # 전체 메시에서 뷰포인트 생성
+    omni_python scripts/1_create_viewpoint.py \
+        --object sample
 """
 
 import os
@@ -466,19 +471,22 @@ def visualize_viewpoints(
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description='Create viewpoints from multi-material OBJ mesh',
+        description='Create viewpoints from OBJ mesh',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic usage with auto-path generation
+  # 전체 메시에서 뷰포인트 생성
+  python %(prog)s --object sample
+
+  # 특정 material만 선택하여 뷰포인트 생성
   python %(prog)s --object sample --material-rgb "0,255,0"
 
-  # With visualization
+  # 시각화 포함
   python %(prog)s --object sample --material-rgb "0,255,0" --visualize
 
 Note:
   - Number of viewpoints is calculated automatically based on surface area and camera FOV
-  - Input mesh:  data/{object}/mesh/source.obj (multi-material OBJ with MTL file)
+  - Input mesh:  data/{object}/mesh/source.obj
   - Output file: data/{object}/viewpoint/{calculated_num}/viewpoints.h5
         """
     )
@@ -490,14 +498,14 @@ Note:
         required=True,
         help='Object name for auto-path generation (e.g., "sample", "glass")'
     )
+
+    # Optional arguments
     parser.add_argument(
         '--material-rgb',
         type=str,
-        required=True,
-        help='Target material RGB color as "R,G,B" (e.g., "0,255,0")'
+        default=None,
+        help='Target material RGB color as "R,G,B" (e.g., "0,255,0"). If not specified, use entire mesh.'
     )
-
-    # Optional arguments
     parser.add_argument(
         '--color-tolerance',
         type=float,
@@ -512,16 +520,17 @@ Note:
 
     args = parser.parse_args()
 
-    # Validate RGB format
-    try:
-        rgb_parts = args.material_rgb.split(',')
-        if len(rgb_parts) != 3:
-            raise ValueError("RGB must have 3 components")
-        r, g, b = map(int, rgb_parts)
-        if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255):
-            raise ValueError("RGB values must be in range [0, 255]")
-    except ValueError as e:
-        parser.error(f"Invalid RGB format: {e}")
+    # Validate RGB format if provided
+    if args.material_rgb is not None:
+        try:
+            rgb_parts = args.material_rgb.split(',')
+            if len(rgb_parts) != 3:
+                raise ValueError("RGB must have 3 components")
+            r, g, b = map(int, rgb_parts)
+            if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255):
+                raise ValueError("RGB values must be in range [0, 255]")
+        except ValueError as e:
+            parser.error(f"Invalid RGB format: {e}")
 
     return args
 
@@ -543,7 +552,10 @@ def main():
     print("=" * 60)
     print(f"Object: {args.object}")
     print(f"Input:  {input_path}")
-    print(f"Target RGB: {args.material_rgb}")
+    if args.material_rgb:
+        print(f"Target RGB: {args.material_rgb}")
+    else:
+        print(f"Target: 전체 메시 (material 필터 없음)")
     print()
 
     # Validate input exists
@@ -551,7 +563,7 @@ def main():
         print(f"Error: Input mesh not found: {input_path}")
         return 1
 
-    # 1. Load multi-material OBJ
+    # 1. Load OBJ
     print("Loading mesh...")
     loaded = trimesh.load(input_path)
 
@@ -565,40 +577,48 @@ def main():
     print(f"  Loaded: {len(mesh.vertices):,} vertices, {len(mesh.faces):,} triangles")
     print()
 
-    # 2. Parse MTL and find material by RGB
-    print("Parsing materials...")
-    triangle_materials, mtl_file = parse_obj_material_usage(input_path)
+    # 2. Determine target mesh (filter by material or use entire mesh)
+    if args.material_rgb:
+        # Filter by material RGB
+        print("Parsing materials...")
+        triangle_materials, mtl_file = parse_obj_material_usage(input_path)
 
-    if mtl_file is None or not os.path.exists(mtl_file):
-        print(f"Error: MTL file not found")
-        return 1
+        if mtl_file is None or not os.path.exists(mtl_file):
+            print(f"Error: MTL file not found")
+            return 1
 
-    materials = parse_mtl_file(mtl_file)
-    print(f"  Found {len(materials)} materials:")
-    for mat_name, mat_props in materials.items():
-        if 'Kd' in mat_props:
-            rgb = kd_to_rgb(mat_props['Kd'])
-            print(f"    - {mat_name}: RGB{rgb}")
-    print()
+        materials = parse_mtl_file(mtl_file)
+        print(f"  Found {len(materials)} materials:")
+        for mat_name, mat_props in materials.items():
+            if 'Kd' in mat_props:
+                rgb = kd_to_rgb(mat_props['Kd'])
+                print(f"    - {mat_name}: RGB{rgb}")
+        print()
 
-    # 3. Match material by RGB
-    print("Matching material...")
-    target_rgb = tuple(map(int, args.material_rgb.split(',')))
-    matched_materials = match_material_by_color(materials, target_rgb, args.color_tolerance)
+        # Match material by RGB
+        print("Matching material...")
+        target_rgb = tuple(map(int, args.material_rgb.split(',')))
+        matched_materials = match_material_by_color(materials, target_rgb, args.color_tolerance)
 
-    if len(matched_materials) == 0:
-        print(f"  Error: No materials matched RGB{target_rgb} within tolerance {args.color_tolerance}")
-        print(f"  Available materials listed above")
-        return 1
+        if len(matched_materials) == 0:
+            print(f"  Error: No materials matched RGB{target_rgb} within tolerance {args.color_tolerance}")
+            print(f"  Available materials listed above")
+            return 1
 
-    print(f"  Matched: {matched_materials}")
-    print()
+        print(f"  Matched: {matched_materials}")
+        print()
 
-    # 4. Extract target mesh
-    print("Extracting target mesh...")
-    target_mesh = extract_target_mesh(mesh, triangle_materials, matched_materials)
-    target_percentage = (len(target_mesh.faces) / len(mesh.faces)) * 100
-    print(f"  Target: {len(target_mesh.faces):,} / {len(mesh.faces):,} triangles ({target_percentage:.1f}%)")
+        # Extract target mesh
+        print("Extracting target mesh...")
+        target_mesh = extract_target_mesh(mesh, triangle_materials, matched_materials)
+        target_percentage = (len(target_mesh.faces) / len(mesh.faces)) * 100
+        print(f"  Target: {len(target_mesh.faces):,} / {len(mesh.faces):,} triangles ({target_percentage:.1f}%)")
+    else:
+        # Use entire mesh
+        print("Using entire mesh (no material filter)...")
+        target_mesh = mesh
+        print(f"  Triangles: {len(target_mesh.faces):,}")
+
     print(f"  Surface area: {target_mesh.area:.6f} m²")
     print()
 
