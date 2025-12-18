@@ -88,3 +88,27 @@ data/{object}/
 ## 설정
 
 `common/config.py`에서 파라미터 설정
+
+### 카메라 사양
+| 파라미터 | 기본값 | 설명 |
+|---------|--------|------|
+| `CAMERA_FOV_WIDTH_MM` | 41.0 | 카메라 시야각 너비 (mm) |
+| `CAMERA_FOV_HEIGHT_MM` | 30.0 | 카메라 시야각 높이 (mm) |
+| `CAMERA_WORKING_DISTANCE_MM` | 110.0 | 작업 거리 (mm) |
+| `CAMERA_OVERLAP_RATIO` | 0.5 | 뷰포인트 간 중첩 비율 |
+
+### 로봇 설정
+| 파라미터 | 설명 |
+|---------|------|
+| `DEFAULT_ROBOT_CONFIG` | 로봇 YAML 설정 파일 |
+| `TOOL_TO_CAMERA_OPTICAL_OFFSET_M` | 툴-카메라 오프셋 (m) |
+
+### IK/충돌/재계획 파라미터
+| 파라미터 | 기본값 | 설명 |
+|---------|--------|------|
+| `COLLISION_MARGIN` | 0.0 | 충돌 마진 |
+| `REPLAN_MAX_ATTEMPTS` | 60 | 재계획 최대 시도 횟수 |
+| `REPLAN_TIMEOUT` | 10.0 | 재계획 타임아웃 (초) |
+
+### 월드 설정
+`TARGET_OBJECT`, `TABLE`, `WALLS`, `ROBOT_MOUNT` 등 Isaac Sim 좌표계(미터 단위)로 정의
