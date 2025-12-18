@@ -30,7 +30,7 @@ CAMERA_OVERLAP_RATIO = 0.5
 # 대상 객체 설정
 TARGET_OBJECT = {
     "name": "target_object",
-    "position": np.array([0.0, 1.05, 1.0 - 0.8], dtype=np.float64),
+    "position": np.array([0.00, 1.09 + 0.13, 0.88 - 0.8], dtype=np.float64),
     "rotation": np.array([0.7071, 0.0, 0.0, 0.7071], dtype=np.float64),  # 쿼터니언: w, x, y, z
 }
 
@@ -38,7 +38,7 @@ TARGET_OBJECT = {
 TABLE = {
     "name": "table",
     "position": np.array([0.0, 1.09 + 0.25, 0.365 - 0.8], dtype=np.float64),
-    "dimensions": np.array([1.0, 0.6, 0.5], dtype=np.float64),
+    "dimensions": np.array([1.0, 0.6, 0.73], dtype=np.float64),
 }
 
 # 벽(펜스) 직육면체 설정 - 작업 공간을 둘러싼 4개의 벽
@@ -62,6 +62,11 @@ WALLS = [
         "name": "wall_right",
         "position": np.array([1.0, 0.0, 0.5], dtype=np.float64),
         "dimensions": np.array([0.1, 2.2, 1.0], dtype=np.float64),
+    },
+    {
+        "name": "support",
+        "position": np.array([0.0, 1.22, -0.0525], dtype=np.float64),
+        "dimensions": np.array([0.1, 0.1, 0.265], dtype=np.float64),
     },
 ]
 
@@ -89,7 +94,7 @@ TOOL_TO_CAMERA_OPTICAL_OFFSET_M = 0.234
 # ============================================================================
 # GTSP 최적화 기본값
 # ============================================================================
-DEFAULT_KNN = 20
+DEFAULT_KNN = 30
 DEFAULT_LAMBDA_ROT = 1.0
 
 # ============================================================================
@@ -97,7 +102,7 @@ DEFAULT_LAMBDA_ROT = 1.0
 # ============================================================================
 
 COLLISION_MARGIN = 0.0
-COLLISION_ADAPTIVE_MAX_JOINT_STEP_DEG = 1  # 1 step 당 최대 joint 변화량
+COLLISION_ADAPTIVE_MAX_JOINT_STEP_DEG = 0.05  # 1 step 당 최대 joint 변화량
 COLLISION_INTERP_EXCLUDE_LAST_JOINT = True # End-Effector 회전 무시
 
 
