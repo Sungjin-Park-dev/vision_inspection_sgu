@@ -10,7 +10,7 @@ Input: Multi-material OBJ file + material RGB color
 Output: HDF5 file with surface positions and normals
 
 Usage:
-    /isaac-sim/python.sh scripts/1_create_viewpoint.py \
+    omni_python scripts/1_create_viewpoint.py \
     --object sample \
     --material-rgb "170,163,158" \
     --visualize

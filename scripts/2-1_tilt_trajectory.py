@@ -14,7 +14,7 @@ Pipeline:
 6. Save final trajectory to CSV
 
 Usage:
-    /isaac-sim/python.sh scripts/2-1_generate_tilt_trajectory.py \
+    omni_python scripts/2-1_generate_tilt_trajectory.py \
         --object sample \
         --num_viewpoints 163 \
         --row-idx 10 \

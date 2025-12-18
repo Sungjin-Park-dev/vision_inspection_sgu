@@ -4,13 +4,13 @@ This script executes a pre-computed collision-free trajectory in Isaac Sim.
 
 Usage:
     # Regular trajectory
-    /isaac-sim/python.sh scripts/3_simulation.py \
+    omni_python scripts/3_simulation.py \
         --object sample \
         --num_viewpoints 163 \
         --visualize_spheres
 
     # Tilt trajectory
-    /isaac-sim/python.sh scripts/3_simulation.py \
+    omni_python scripts/3_simulation.py \
         --object sample \
         --num_viewpoints 163 \
         --tilt \

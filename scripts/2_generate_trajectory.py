@@ -12,7 +12,7 @@ This script integrates the complete vision inspection pipeline:
 7. Save final collision-free trajectory to CSV
 
 Usage:
-    /isaac-sim/python.sh scripts/2_generate_trajectory.py \
+    omni_python scripts/2_generate_trajectory.py \
         --object sample \
         --num_viewpoints 163
 

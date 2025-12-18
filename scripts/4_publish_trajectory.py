@@ -1,4 +1,19 @@
 #!/usr/bin/env python3
+"""
+Publish Joint Trajectory to ROS2 Topic
+
+This script loads a trajectory CSV file and publishes it as a ROS2 JointTrajectory message.
+Used to send pre-computed trajectories to robot controllers or simulation.
+
+Usage:
+    python scripts/4_publish_trajectory.py \
+        --object sample \
+        --num_viewpoints 163
+
+    Paths are auto-generated:
+    - Input: data/{object}/trajectory/{num_viewpoints}/trajectory.csv
+"""
+
 import csv
 import os
 import sys
