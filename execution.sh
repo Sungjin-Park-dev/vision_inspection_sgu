@@ -87,5 +87,5 @@ docker run --name "$CONTAINER_NAME" --entrypoint bash -it\
   -v ~/docker/isaac-sim/data:/root/.local/share/ov/data:rw \
   -v ~/docker/isaac-sim/documents:/root/Documents:rw \
   -v "$ROS_WS_DIR":/workspace/IsaacSim-ros_workspaces:rw \
-  -v "$PROJECT_DIR":/curobo/vision_inspection_sgu:rw \
+  -v "$PROJECT_DIR":/curobo/gtsp_trajectory:rw \
   $IMAGE_NAME
