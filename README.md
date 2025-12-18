@@ -76,7 +76,10 @@ cd /curobo/vision_inspection_sgu
 
 ### 기존 컨테이너 삭제
 
+컨테이너 외부에서 코드를 수정한 후 다시 반영하려면, 기존 컨테이너를 삭제하고 `execution.sh`를 다시 실행해야 합니다:
+
 ```bash
 docker stop isaac_curobo_container
 docker rm isaac_curobo_container
+./execution.sh
 ```
