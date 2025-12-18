@@ -54,7 +54,7 @@ https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/install_container.
 # 프로젝트 디렉토리로 이동
 cd /curobo/gtsp_trajectory
 
-# 스크립트 실행 (자세한 내용은 scripts/README.md 참고)
+# 비전 검사 스크립트 실행
 omni_python scripts/1_create_viewpoint.py
 ```
 
@@ -76,5 +76,7 @@ omni_python scripts/1_create_viewpoint.py
 docker stop isaac_curobo_container # 컨테이너 중지
 docker rm isaac_curobo_container   # 컨테이너 삭제
 docker rmi isaac_curobo:image      # 이미지 삭제
+
+./install.sh      # 이미지 재설치
+./execution.sh    # 컨테이너 실행
 ```
-후 다시 재설치
