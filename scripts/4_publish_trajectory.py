@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-Publish Joint Trajectory to ROS2 Topic
+ROS2 토픽으로 검사 궤적을 moveit으로 전송
+로봇 컨트롤은 moveit을 사용하여 이루어짐
 
-This script loads a trajectory CSV file and publishes it as a ROS2 JointTrajectory message.
-Used to send pre-computed trajectories to robot controllers or simulation.
-
-Usage:
-    python scripts/4_publish_trajectory.py \
+사용법:
+    omni_python scripts/4_publish_trajectory.py \
         --object sample \
         --num_viewpoints 163
 
-    Paths are auto-generated:
-    - Input: data/{object}/trajectory/{num_viewpoints}/trajectory.csv
+경로는 자동으로 생성됩니다:
+- 입력: data/{object}/trajectory/{num_viewpoints}/trajectory.csv
 """
 
 import csv

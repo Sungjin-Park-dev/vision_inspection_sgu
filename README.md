@@ -25,7 +25,7 @@ Docker, NVIDIA Container Toolkit을 설치합니다:
 https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/install_container.html
 ```
 
-### 2. Docker 이미지 빌드
+### 2. Docker 이미지 빌드 (최초 1회)
 
 자동 설치 스크립트를 실행합니다:
 
@@ -35,7 +35,6 @@ https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/install_container.
 
 **이 스크립트가 하는 일:**
 - Isaac Sim + cuRobo Docker 이미지 빌드 (isaac_curobo:image)
-- 최초 1회 실행
 
 **소요 시간:** 첫 빌드 시 30분~1시간 이상 소요될 수 있습니다.
 
@@ -56,20 +55,26 @@ https://docs.isaacsim.omniverse.nvidia.com/5.0.0/installation/install_container.
 cd /curobo/gtsp_trajectory
 
 # 스크립트 실행 (자세한 내용은 scripts/README.md 참고)
-/isaac-sim/python.sh scripts/1_create_viewpoint.py
+omni_python scripts/1_create_viewpoint.py
 ```
-
-### 코드 수정 반영
-
-프로젝트 폴더가 volume mount로 연결되어 있어, 호스트에서 코드를 수정하면 컨테이너에 즉시 반영됩니다.
-
-**이미지 재빌드가 필요한 경우:**
-- Dockerfile 자체 변경 (패키지 추가, 환경 설정 등)
-- `ur20_description/` 로봇 설정 변경
-
-**재빌드 없이 즉시 반영:**
-- `scripts/`, `common/`, `data/` 코드 변경
 
 ## 사용 방법
 
 비전 검사 파이프라인 사용 방법은 [scripts/README.md](scripts/README.md)를 참고하세요.
+
+
+## 참고: Docker 이미지/컨테이너 재빌드(클린 빌드)
+
+### 언제 재빌드가 필요한가?
+- Dockerfile 변경 (패키지 추가/환경변수/시스템 라이브러리 등)
+- cuRobo / Isaac Sim 버전 변경 또는 의존성 설치 방식 변경
+- `ur20_description/` 등 로봇 모델(URDF/mesh) 변경
+- 컨테이너 내부에 설치한 내용이 꼬였거나(의존성 충돌) 깔끔한 초기화가 필요한 경우
+
+### 클린 재빌드 절차
+```bash
+docker stop isaac_curobo_container # 컨테이너 중지
+docker rm isaac_curobo_container   # 컨테이너 삭제
+docker rmi isaac_curobo:image      # 이미지 삭제
+```
+후 다시 재설치

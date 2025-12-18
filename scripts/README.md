@@ -9,8 +9,12 @@
 ```
 
 ## 실행 준비
+Docker 컨테이너 실행
+```bash
+./execution.sh
+```
 
-Docker 컨테이너 내부에서 프로젝트 디렉토리로 이동:
+컨테이너 내부에서 프로젝트 디렉토리로 이동:
 ```bash
 cd /curobo/gtsp_trajectory
 ```
@@ -66,6 +70,8 @@ Isaac Sim에서 궤적 실행
 
 ### 4_publish_trajectory.py
 ROS2 토픽으로 궤적 퍼블리시
+이 스크립트는 궤적을 보내기만 하고, 
+moveit 쪽에서 받은 궤적을 따라 로봇을 움직입니다.
 
 ```bash
 --object          # 객체 이름 (필수)
@@ -111,4 +117,4 @@ data/{object}/
 | `REPLAN_TIMEOUT` | 10.0 | 재계획 타임아웃 (초) |
 
 ### 월드 설정
-`TARGET_OBJECT`, `TABLE`, `WALLS`, `ROBOT_MOUNT` 등 Isaac Sim 좌표계(미터 단위)로 정의
+`TARGET_OBJECT`, `TABLE`, `WALLS`, `ROBOT_MOUNT` 등 환경 및 물체에 대한 정보

@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Generate Collision-Free Robot Trajectory from Viewpoints
+뷰포인트에서 충돌 없는 로봇 궤적 생성
 
-This script integrates the complete vision inspection pipeline:
-1. Load viewpoints (surface positions + normals)
-2. Compute IK solutions for each viewpoint
-3. Filter collision-free IK solutions
-4. Optimize visit order using GTSP
-5. Interpolate trajectory and check collisions
-6. Replan colliding segments using MotionGen
-7. Save final collision-free trajectory to CSV
+비전 검사 파이프라인:
+1. 뷰포인트 데이터 로드(표면 위치 + 법선 벡터)
+2. 각 뷰포인트에 대한 IK 해 계산
+3. 충돌 없는 IK 해만 필터링
+4. GTSP로 방문 순서(투어) 최적화
+5. 궤적 보간(interpolation) 및 충돌 검사
+6. 충돌하는 구간은 cuRobo으로 재계획(replan)
+7. 최종 충돌 없는 궤적을 CSV로 저장
 
-Usage:
+사용법:
     omni_python scripts/2_generate_trajectory.py \
         --object sample \
         --num_viewpoints 163
 
-    Paths are auto-generated:
-    - Input:  data/{object}/viewpoint/{num_viewpoints}/viewpoints.h5
-    - Output: data/{object}/trajectory/{num_viewpoints}/trajectory.csv
-    - Mesh:   data/{object}/mesh/source.obj
+경로는 자동으로 생성됩니다:
+- 입력:  data/{object}/viewpoint/{num_viewpoints}/viewpoints.h5
+- 출력:  data/{object}/trajectory/{num_viewpoints}/trajectory.csv
+- 메쉬:  data/{object}/mesh/source.obj
 """
 
 # ============================================================================

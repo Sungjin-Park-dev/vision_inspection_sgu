@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 """
-This script executes a pre-computed collision-free trajectory in Isaac Sim.
+사전에 계산된 충돌 없는 궤적을 Isaac Sim으로 실행
 
-Usage:
-    # Regular trajectory
+사용법:
+    omni_python scripts/3_simulation.py \
+        --object sample \
+        --num_viewpoints 163
+
+    # Tilt 궤적
     omni_python scripts/3_simulation.py \
         --object sample \
         --num_viewpoints 163 \
-        --visualize_spheres
-
-    # Tilt trajectory
-    omni_python scripts/3_simulation.py \
-        --object sample \
-        --num_viewpoints 163 \
-        --tilt \
-        --visualize_spheres
+        --tilt
 """
 
 # ============================================================================
@@ -53,25 +50,6 @@ from isaacsim.simulation_app import SimulationApp
 parser = argparse.ArgumentParser(
     description="Simulate robot trajectory in Isaac Sim (educational version)",
     formatter_class=argparse.RawDescriptionHelpFormatter,
-    epilog="""
-Example (regular trajectory):
-  /isaac-sim/python.sh scripts/3_simulation.py \\
-      --object sample \\
-      --num_viewpoints 163 \\
-      --visualize_spheres
-
-Example (tilt trajectory):
-  /isaac-sim/python.sh scripts/3_simulation.py \\
-      --object sample \\
-      --num_viewpoints 163 \\
-      --tilt \\
-      --visualize_spheres
-
-Paths are auto-generated:
-  - Regular:    data/{object}/trajectory/{num_viewpoints}/trajectory.csv
-  - Tilt:       data/{object}/trajectory/{num_viewpoints}/tilt_trajectory.csv
-  - Mesh:       data/{object}/mesh/source.obj
-    """
 )
 
 # Required arguments

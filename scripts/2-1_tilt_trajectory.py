@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 """
-Generate Tilt Trajectory with Roll/Pitch Variations
+Roll/Pitch 변형을 포함한 Tilt 궤적 생성
 
-This script generates a collision-free trajectory by creating tilt waypoints
-around a selected camera pose and optimizing the path using Dynamic Programming.
+파이프라인:
+1. 기존 trajectory CSV에서 기준(base) 포즈 로드
+2. 기준 포즈 주변에 roll/pitch tilt 웨이포인트 생성
+3. IK 해 계산 및 필터링
+4. 웨이포인트 방문 순서 최적화
+5. 최종 궤적을 CSV로 저장
 
-Pipeline:
-1. Load base pose from existing trajectory CSV
-2. Generate roll/pitch tilt waypoints around the base pose
-3. Compute IK solutions using EAIK (analytical IK)
-4. Filter collision-free IK solutions using CuRobo
-5. Optimize waypoint visit order using DP (Viterbi algorithm)
-6. Save final trajectory to CSV
-
-Usage:
+사용법:
     omni_python scripts/2-1_generate_tilt_trajectory.py \
         --object sample \
         --num_viewpoints 163 \
@@ -23,9 +19,9 @@ Usage:
         --roll-min -20 --roll-max 20 --roll-n 200 \
         --pitch-min -20 --pitch-max 20 --pitch-n 200
 
-    Paths are auto-generated:
-    - Input:  data/{object}/trajectory/{num_viewpoints}/{input_file}
-    - Output: data/{object}/trajectory/{num_viewpoints}/{output_file}
+경로는 자동으로 생성됩니다:
+- 입력:  data/{object}/trajectory/{num_viewpoints}/{input_file}
+- 출력:  data/{object}/trajectory/{num_viewpoints}/{output_file}
 """
 
 # ============================================================================

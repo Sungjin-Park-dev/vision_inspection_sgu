@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Create Viewpoints from Mesh
+메시에서 뷰포인트 생성
 
-Simplified unified script combining:
-- Multi-material OBJ preprocessing (optional)
-- Uniform Poisson disk sampling for viewpoint generation
+통합 스크립트 기능:
+- 다중 재질 OBJ 전처리 (선택 사항)
+- 포아송 디스크 샘플링을 통한 균일한 뷰포인트 생성
 
-Input: OBJ file (optionally with material RGB color filter)
-Output: HDF5 file with surface positions and normals
+입력: OBJ 파일 (선택적으로 재질 RGB 색상 필터 적용 가능)
+출력: 표면 위치와 법선 벡터가 포함된 HDF5 파일
 
-Usage:
-    # 특정 material만 선택하여 뷰포인트 생성
+사용법:
+    # 특정 재질만 선택하여 뷰포인트 생성
     omni_python scripts/1_create_viewpoint.py \
         --object sample \
         --material-rgb "170,163,158" \
         --visualize
-    
+
     # 전체 메시에서 뷰포인트 생성
     omni_python scripts/1_create_viewpoint.py \
         --object sample
