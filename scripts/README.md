@@ -12,26 +12,26 @@
 
 Docker 컨테이너 내부에서 프로젝트 디렉토리로 이동:
 ```bash
-cd /curobo/vision_inspection_sgu
+cd /curobo/gtsp_trajectory
 ```
 
 ## 전체 실행 예시
 
 ```bash
 # 1단계: 뷰포인트 생성
-/isaac-sim/python.sh scripts/1_create_viewpoint.py \
+omni_python scripts/1_create_viewpoint.py \
     --object sample --material-rgb "170,163,158"
 
 # 2단계: 궤적 생성
-/isaac-sim/python.sh scripts/2_generate_trajectory.py \
+omni_python scripts/2_generate_trajectory.py \
     --object sample --num_viewpoints 163
 
 # 3단계: 시뮬레이션
-/isaac-sim/python.sh scripts/3_simulation.py \
+omni_python scripts/3_simulation.py \
     --object sample --num_viewpoints 163 --visualize_spheres
 
-# 4단계: ROS 퍼블리시
-python3 scripts/4_publish_trajectory.py \
+# 4단계: 생성된 궤적으로 ROS로 퍼블리시
+omni_python scripts/4_publish_trajectory.py \
     --object sample --num_viewpoints 163
 ```
 
@@ -52,9 +52,6 @@ python3 scripts/4_publish_trajectory.py \
 ```bash
 --object          # 객체 이름 (필수)
 --num_viewpoints  # 뷰포인트 개수 (필수)
---knn             # k-NN 이웃 수 (기본값: 5)
---lambda-rot      # 회전 비용 가중치 (기본값: 1.0)
---visualize       # 궤적 시각화 (옵션)
 ```
 
 ### 3_simulation.py
@@ -65,7 +62,6 @@ Isaac Sim에서 궤적 실행
 --num_viewpoints    # 뷰포인트 개수 (필수)
 --visualize_spheres # 로봇 충돌 구체 표시 (옵션)
 --tilt              # tilt 궤적 사용 (옵션)
---headless          # 헤드리스 모드: native 또는 websocket (옵션)
 ```
 
 ### 4_publish_trajectory.py
@@ -74,7 +70,6 @@ ROS2 토픽으로 궤적 퍼블리시
 ```bash
 --object          # 객체 이름 (필수)
 --num_viewpoints  # 뷰포인트 개수 (필수)
---dt              # 궤적 포인트 간 시간 간격 (기본값: 0.01초)
 ```
 
 ## 디렉토리 구조

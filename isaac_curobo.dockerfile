@@ -48,17 +48,18 @@ RUN /isaac-sim/python.sh -m pip install -e ".[isaacsim]" --no-build-isolation
 WORKDIR /curobo
 RUN /isaac-sim/python.sh -m pip install open3d EAIK h5py
 
-# vision_inspection_sgu 로컬 파일 복사 (robot description)
+# 로컬 파일 복사 (robot description)
 COPY ur20_description/ur20_with_camera.yml /curobo/src/curobo/content/configs/robot/
 COPY ur20_description/ur20_with_camera.urdf /curobo/src/curobo/content/assets/robot/ur_description/
 COPY ur20_description/ur20 /curobo/src/curobo/content/assets/robot/ur_description/meshes/ur20
 COPY ur20_description/camera /curobo/src/curobo/content/assets/robot/ur_description/meshes/camera
 
-# vision_inspection_sgu 프로젝트 폴더 복사
-WORKDIR /curobo/vision_inspection_sgu
+# gtsp_trajectory 프로젝트 폴더 복사
+WORKDIR /curobo/gtsp_trajectory
 COPY common/ ./common/
 COPY data/ ./data/
 COPY scripts/ ./scripts/
+COPY fastdds.xml /root/.ros/fastdds.xml
 
 # Isaac + ROS 환경변수 및 ROS workspace source를 bashrc에 추가
 RUN echo 'export ISAAC_SIM_PACKAGE_PATH=/isaac-sim' >> /root/.bashrc && \
@@ -66,8 +67,7 @@ RUN echo 'export ISAAC_SIM_PACKAGE_PATH=/isaac-sim' >> /root/.bashrc && \
     echo 'export RMW_IMPLEMENTATION=rmw_fastrtps_cpp' >> /root/.bashrc && \
     echo 'export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ISAAC_SIM_PACKAGE_PATH}/exts/isaacsim.ros2.bridge/humble/lib' >> /root/.bashrc && \
     echo 'export COLCON_PYTHON_EXECUTABLE=${ISAAC_SIM_PACKAGE_PATH}/python.sh' >> /root/.bashrc && \
-    # echo 'export FASTRTPS_DEFAULT_PROFILES_FILE=${FASTRTPS_DEFAULT_PROFILES_FILE:-/root/.ros/fastdds.xml}' >> /root/.bashrc && \
-    echo 'export FASTRTPS_DEFAULT_PROFILES_FILE=${FASTRTPS_DEFAULT_PROFILES_FILE::-/workspace/IsaacSim-ros_workspaces/humble_ws/fastdds.xml}' >> /root/.bashrc && \
+    echo 'export FASTRTPS_DEFAULT_PROFILES_FILE=${FASTRTPS_DEFAULT_PROFILES_FILE:-/root/.ros/fastdds.xml}' >> /root/.bashrc && \
     echo 'export ROS_WS_ROOT=${ROS_WS_ROOT:-/workspace/IsaacSim-ros_workspaces}' >> /root/.bashrc && \
     echo 'source "${ROS_WS_ROOT}/build_ws/humble/humble_ws/install/local_setup.bash"' >> /root/.bashrc && \
     echo 'source "${ROS_WS_ROOT}/build_ws/humble/isaac_sim_ros_ws/install/local_setup.bash"' >> /root/.bashrc && \
